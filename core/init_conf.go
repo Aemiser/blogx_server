@@ -1,13 +1,12 @@
 package core
 
 import (
+	"blogx_server/flags"
 	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
 )
-
-var confPath = "settings.yaml"
 
 type Server struct {
 	IP   string `yaml:"ip"`
@@ -18,7 +17,7 @@ type Config struct {
 }
 
 func ReadConf() {
-	byteData, err := os.ReadFile(confPath)
+	byteData, err := os.ReadFile(flags.FlagOptions.File)
 	if err != nil {
 		panic(err)
 	}
