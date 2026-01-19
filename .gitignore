@@ -1,0 +1,6 @@
+.idea
+settings.yaml
+tmp
+main.go
+logs/*
+upload/ *
