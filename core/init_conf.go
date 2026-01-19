@@ -17,9 +17,9 @@ func ReadConf() (c *conf.Config) {
 	c = new(conf.Config)
 	err = yaml.Unmarshal(byteData, &c)
 	if err != nil {
-		panic(fmt.Sprintf("yaml配置文件格式错误 %s", err))
+		panic(fmt.Sprintf("yaml配置文件格式错误 %s \n", err))
 	}
 
-	fmt.Printf("读取配置文件 %s 成功", flags.FlagOptions.File)
+	fmt.Printf("读取配置文件 %s 成功\n", flags.FlagOptions.File)
 	return
 }

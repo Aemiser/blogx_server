@@ -1,6 +1,8 @@
 package conf
 
 type Config struct {
-	Server `yaml:"server"`
-	Log    `yaml:"log"`
+	System System `yaml:"server"`
+	Log    Log    `yaml:"log"`
+	DB     DB     `yaml:"db"`
+	DB1    DB     `yaml:"db1"`
 }
