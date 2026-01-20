@@ -1,10 +1,7 @@
 package conf
 
 import (
-	"blogx_server/core"
 	"fmt"
-
-	"gorm.io/gorm"
 )
 
 type DB struct {
