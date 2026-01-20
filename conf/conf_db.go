@@ -1,14 +1,21 @@
 package conf
 
-import "fmt"
+import (
+	"blogx_server/core"
+	"fmt"
+
+	"gorm.io/gorm"
+)
 
 type DB struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	DBName   string `yaml:"dbname"`
-	Debug    bool   `yaml:"debug"`
+	Host         string `yaml:"host"`
+	Port         int    `yaml:"port"`
+	User         string `yaml:"user"`
+	Password     string `yaml:"password"`
+	DBName       string `yaml:"dbname"`
+	Debug        bool   `yaml:"debug"`
+	MaxIdleConns int    `yaml:"maxIdleConns"`
+	MaxOpenConns int    `yaml:"maxOpenConns"`
 }
 
 func (d DB) GetDSN() string {
@@ -21,4 +28,8 @@ func (d DB) GetDSN() string {
 		d.DBName,
 	)
 	return dsn
+}
+
+func (d DB) Empty() bool {
+	return d.Host == "" && d.Port == 0 && d.User == "" && d.Password == "" && d.DBName == ""
 }
