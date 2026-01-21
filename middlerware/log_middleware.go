@@ -1,12 +1,9 @@
 package middlerware
 
 import (
-	"bytes"
-	"fmt"
-	"io"
+	"blogx_server/service/log_service"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type ResponseWriter struct {
@@ -21,18 +18,17 @@ func (w *ResponseWriter) Write(data []byte) (int, error) {
 
 func LogMiddleware(c *gin.Context) {
 	// 请求中间件
-	byteData, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		logrus.Error(err.Error())
-	}
-	fmt.Println("boby: ", string(byteData))
-	c.Request.Body = io.NopCloser(bytes.NewBuffer(byteData))
+	log := log_service.NewActionLog(c)
+	log.SetRequest(c)
+	// 存储到gin的上下文中，方便视图层调用
+	c.Set("log", log)
 	res := &ResponseWriter{
 		ResponseWriter: c.Writer,
 	}
 	c.Writer = res
 	c.Next()
 	// 响应中间件
+	log.SetResponse(res.Body)
+	log.Save()
 
-	fmt.Println("response：", string(res.Body))
 }

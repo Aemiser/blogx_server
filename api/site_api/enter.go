@@ -31,8 +31,7 @@ type SiteUpdateRequest struct {
 }
 
 func (SiteApi) SiteUpdateView(c *gin.Context) {
-	log := log_service.NewActionLog(c)
-
+	log := log_service.GetLog(c)
 	var req SiteUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logrus.Errorf(err.Error())
