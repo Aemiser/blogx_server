@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func NewLoginSuccess(c *gin.Context, loginType enum.LoginType) {
@@ -31,7 +32,7 @@ func NewLoginSuccess(c *gin.Context, loginType enum.LoginType) {
 		Pwd:         "-",
 		LoginType:   loginType,
 	})
-
+	logrus.Info("日志创建成功")
 }
 
 func NewLoginFail(c *gin.Context, loginType enum.LoginType, msg, username, pwd string) {
