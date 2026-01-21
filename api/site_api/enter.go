@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type SiteApi struct {
 }
 
-func (SiteApi) SIteInfoView(c *gin.Context) {
+func (SiteApi) SiteInfoView(c *gin.Context) {
 	fmt.Printf("1")
 	log_service.NewLoginSuccess(c, enum.UserPwdLoginType)
 	log_service.NewLoginFail(c, enum.UserPwdLoginType, "用户名不存在", "test", "1234")
@@ -25,8 +26,17 @@ func (SiteApi) SIteInfoView(c *gin.Context) {
 	return
 }
 
-func (SiteApi) SIteUpdateView(c *gin.Context) {
+type SiteUpdateRequest struct {
+	Name string `json:"name"`
+}
+
+func (SiteApi) SiteUpdateView(c *gin.Context) {
 	log := log_service.NewActionLog(c)
+
+	var req SiteUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logrus.Errorf(err.Error())
+	}
 	log.Save()
 	c.JSON(200, gin.H{
 
