@@ -23,6 +23,7 @@ func Parse() {
 func Run() {
 	if FlagOptions.DB {
 		FlagDB()
+		os.Exit(0)
 	}
-	os.Exit(0)
+
 }
