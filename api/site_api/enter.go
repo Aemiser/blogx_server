@@ -37,6 +37,7 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logrus.Errorf(err.Error())
 	}
+	fmt.Println(req)
 	log.Save()
 	c.JSON(200, gin.H{
 
