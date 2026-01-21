@@ -22,6 +22,19 @@ func (SiteApi) SIteInfoView(c *gin.Context) {
 			"version": "1.0.0",
 		},
 	})
+	return
+}
 
+func (SiteApi) SIteUpdateView(c *gin.Context) {
+	log := log_service.NewActionLog(c)
+	log.Save()
+	c.JSON(200, gin.H{
+
+		"code": 200,
+		"data": gin.H{
+			"name":    "site",
+			"version": "1.0.0",
+		},
+	})
 	return
 }
