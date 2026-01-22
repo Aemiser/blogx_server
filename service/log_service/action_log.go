@@ -47,6 +47,7 @@ func GetLog(c *gin.Context) *ActionLog {
 	if !ok {
 		return NewActionLog(c)
 	}
+	c.Set("SaveLog", true)
 	return log
 
 }
@@ -148,15 +149,20 @@ func (ac *ActionLog) SetError(label string, err error) {
 	))
 }
 
-func (ac *ActionLog) MiddlewareSave() uint {
+func (ac *ActionLog) MiddlewareSave() {
+	// 没有调用这个对象就不创建日志
+	_savelog, _ := ac.c.Get("SaveLog")
+	savelog, _ := _savelog.(bool)
+	if !savelog {
+		return
+	}
 	if ac.log == nil {
 		// 创建
 		ac.idMiddleware = true
 		ac.Save()
-		return ac.log.ID
+		return
 	}
-	// 在视图里面Save过，现在更新)
-
+	// 在视图里面Save过，现在更新
 	// 设置响应头
 	if ac.showResponseHeader {
 		byteDate, _ := json.Marshal(ac.ResponseHeader)
@@ -171,7 +177,7 @@ func (ac *ActionLog) MiddlewareSave() uint {
 		))
 	}
 	ac.Save()
-	return ac.log.ID
+	return
 }
 func (ac *ActionLog) Save() uint {
 	// 优化Save:
