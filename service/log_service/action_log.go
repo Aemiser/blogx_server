@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -17,15 +18,18 @@ import (
 )
 
 type ActionLog struct {
-	c            *gin.Context
-	title        string
-	level        enum.LogLevelType
-	RequestBody  []byte
-	ResponseBody []byte
-	log          *models.LogModel
-	showRequest  bool
-	showResponse bool
-	itemList     []string
+	c                  *gin.Context
+	title              string
+	level              enum.LogLevelType
+	RequestBody        []byte
+	ResponseBody       []byte
+	showRequest        bool
+	showResponse       bool
+	ResponseHeader     http.Header
+	showRequestHeader  bool
+	showResponseHeader bool
+	log                *models.LogModel
+	itemList           []string
 }
 
 func NewActionLog(c *gin.Context) *ActionLog {
@@ -74,6 +78,21 @@ func (ac *ActionLog) ShowRequest() {
 	ac.showRequest = true
 }
 
+func (ac *ActionLog) SetLink(label string, href string) {
+	ac.itemList = append(ac.itemList, fmt.Sprintf("<div class=\"log_item link\">\n    <div class=\"log_item_label\">%s</div>\n    <div class=\"log_item_content\">\n        <a href=\"%s\" target=\"_blank\">%s</a>\n    </div>\n</div>\n",
+		label,
+		href,
+		href,
+	))
+
+}
+
+func (ac *ActionLog) SetImage(src string) {
+	ac.itemList = append(ac.itemList, fmt.Sprintf("<div class=\"log_image\">\n    <img src=\"%s\" alt=\"\">\n</div>",
+		src,
+	))
+}
+
 func (ac *ActionLog) setItem(label string, value any, loglevel enum.LogLevelType) {
 	var v string
 	t := reflect.TypeOf(value)
@@ -91,6 +110,16 @@ func (ac *ActionLog) setItem(label string, value any, loglevel enum.LogLevelType
 	))
 }
 
+func (ac *ActionLog) ShowRequestHeader() {
+	ac.showRequestHeader = true
+}
+func (ac *ActionLog) ShowResponseHeader() {
+	ac.showResponseHeader = true
+}
+
+func (ac *ActionLog) SetResponseHeader(header http.Header) {
+	ac.ResponseHeader = header
+}
 func (ac *ActionLog) SetItem(label string, value any) {
 	ac.setItem(label, value, enum.LogInfoLevel)
 }
@@ -120,9 +149,18 @@ func (ac *ActionLog) Save() {
 	userID := uint(1)
 
 	tmpItemList := []string{}
+
+	// 设置请求头
+	if ac.showRequestHeader {
+		byteDate, _ := json.Marshal(ac.c.Request.Header)
+		tmpItemList = append(tmpItemList, fmt.Sprintf("\n<div class=\"log_request_header\">\n    <div class=\"log_request_body\">\n        <pre class=\"log_json_body\">%s</pre>\n    </div>\n</div>",
+			string(byteDate),
+		))
+	}
 	// 设置请求
 	if ac.showRequest {
-		tmpItemList = append(tmpItemList, fmt.Sprintf("<div class=\"log_request\">\n    <div class=\"log_request_head\">\n        <span class=\"log_request_method delete\">%s</span>\n        <span class=\"log_request_path\">%s</span>\n    </div>\n    <div class=\"log_request_body\">\n        <pre class=\"log_json_body\">%s</pre>\n    </div>\n</div>",
+		tmpItemList = append(tmpItemList, fmt.Sprintf("<div class=\"log_request\">\n    <div class=\"log_request_head\">\n        <span class=\"log_request_method %s\">%s</span>\n        <span class=\"log_request_path\">%s</span>\n    </div>\n    <div class=\"log_request_body\">\n        <pre class=\"log_json_body\">%s</pre>\n    </div>\n</div>",
+			strings.ToLower(ac.c.Request.Method),
 			ac.c.Request.Method,
 			ac.c.Request.URL.String(),
 			string(ac.RequestBody),
@@ -132,6 +170,13 @@ func (ac *ActionLog) Save() {
 	// 中间contest
 	tmpItemList = append(tmpItemList, ac.itemList...)
 
+	// 设置响应头
+	if ac.showResponseHeader {
+		byteDate, _ := json.Marshal(ac.ResponseHeader)
+		tmpItemList = append(tmpItemList, fmt.Sprintf("\n<div class=\"log_response_header\">\n    <div class=\"log_response_body\">\n        <pre class=\"log_json_body\">%s</pre>\n    </div>\n</div>",
+			string(byteDate),
+		))
+	}
 	// 设置响应
 	if ac.showResponse {
 		tmpItemList = append(tmpItemList, fmt.Sprintf("<div class=\"log_response\">\n    <pre class=\"log_json_body\">%s</pre>\n</div>",

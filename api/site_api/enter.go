@@ -35,8 +35,13 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 
 	log.ShowRequest()
 	log.ShowResponse()
-
+	log.ShowRequestHeader()
+	log.ShowResponseHeader()
 	log.SetTitle("更新站点信息")
+	log.SetImage("https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png")
+	log.SetLink("学习地址", "https://www.baidu.com")
+	c.Header("xcx", "weafgdk")
+
 	var req SiteUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logrus.Errorf(err.Error())
