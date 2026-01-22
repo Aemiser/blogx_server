@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type SiteApi struct {
@@ -44,7 +43,7 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 
 	var req SiteUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logrus.Errorf(err.Error())
+		log.SetError("参数错误", err)
 	}
 
 	log.SetItemInfo("结构体", req)

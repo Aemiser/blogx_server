@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	e "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -135,6 +136,16 @@ func (ac *ActionLog) SetItemError(label string, value any) {
 	ac.setItem(label, value, enum.LogErrLevel)
 }
 
+func (ac *ActionLog) SetError(label string, err error) {
+	msg := e.WithStack(err)
+	logrus.Errorf(err.Error())
+	ac.itemList = append(ac.itemList, fmt.Sprintf("\n<div class=\"log_error\">\n    <div class=\"line\">\n        <div class=\"label\">%s</div>\n        <div class=\"value\">%s</div>\n        <div class=\"type\">%T</div>\n    </div>\n    <div class=\"stack\">%+v</div>\n</div>\n",
+		label, // 错误信息
+		err,   // 错误内容
+		err,   // 错误类型
+		msg,   // 错误堆栈
+	))
+}
 func (ac *ActionLog) Save() {
 	if ac.log != nil {
 		// 之前创建了，下次就是更新
