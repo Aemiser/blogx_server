@@ -31,6 +31,7 @@ type ActionLog struct {
 	showResponseHeader bool
 	log                *models.LogModel
 	itemList           []string
+	idMiddleware       bool
 }
 
 func NewActionLog(c *gin.Context) *ActionLog {
@@ -146,13 +147,46 @@ func (ac *ActionLog) SetError(label string, err error) {
 		msg,   // 错误堆栈
 	))
 }
-func (ac *ActionLog) Save() {
+
+func (ac *ActionLog) MiddlewareSave() uint {
+	if ac.log == nil {
+		// 创建
+		ac.idMiddleware = true
+		ac.Save()
+		return ac.log.ID
+	}
+	// 在视图里面Save过，现在更新)
+
+	// 设置响应头
+	if ac.showResponseHeader {
+		byteDate, _ := json.Marshal(ac.ResponseHeader)
+		ac.itemList = append(ac.itemList, fmt.Sprintf("\n<div class=\"log_response_header\">\n    <div class=\"log_response_body\">\n        <pre class=\"log_json_body\">%s</pre>\n    </div>\n</div>",
+			string(byteDate),
+		))
+	}
+	// 设置响应
+	if ac.showResponse {
+		ac.itemList = append(ac.itemList, fmt.Sprintf("<div class=\"log_response\">\n    <pre class=\"log_json_body\">%s</pre>\n</div>",
+			string(ac.ResponseBody),
+		))
+	}
+	ac.Save()
+	return ac.log.ID
+}
+func (ac *ActionLog) Save() uint {
+	// 优化Save:
+	// 方案1：save只能在日志的响应中间件里面调用
+	// 方案2：在视图里面调用Save，需要返回日志的ID
+
 	if ac.log != nil {
+		newList := strings.Join(ac.itemList, "\n")
+		content := ac.log.Content + "\n" + newList
 		// 之前创建了，下次就是更新
 		global.Db.Model(ac.log).Updates(map[string]any{
-			"title": "更新",
+			"content": content,
 		})
-		return
+		ac.itemList = []string{}
+		return ac.log.ID
 	}
 
 	ip := ac.c.ClientIP()
@@ -181,18 +215,20 @@ func (ac *ActionLog) Save() {
 	// 中间contest
 	tmpItemList = append(tmpItemList, ac.itemList...)
 
-	// 设置响应头
-	if ac.showResponseHeader {
-		byteDate, _ := json.Marshal(ac.ResponseHeader)
-		tmpItemList = append(tmpItemList, fmt.Sprintf("\n<div class=\"log_response_header\">\n    <div class=\"log_response_body\">\n        <pre class=\"log_json_body\">%s</pre>\n    </div>\n</div>",
-			string(byteDate),
-		))
-	}
-	// 设置响应
-	if ac.showResponse {
-		tmpItemList = append(tmpItemList, fmt.Sprintf("<div class=\"log_response\">\n    <pre class=\"log_json_body\">%s</pre>\n</div>",
-			string(ac.ResponseBody),
-		))
+	if ac.idMiddleware {
+		// 设置响应头
+		if ac.showResponseHeader {
+			byteDate, _ := json.Marshal(ac.ResponseHeader)
+			tmpItemList = append(tmpItemList, fmt.Sprintf("\n<div class=\"log_response_header\">\n    <div class=\"log_response_body\">\n        <pre class=\"log_json_body\">%s</pre>\n    </div>\n</div>",
+				string(byteDate),
+			))
+		}
+		// 设置响应
+		if ac.showResponse {
+			tmpItemList = append(tmpItemList, fmt.Sprintf("<div class=\"log_response\">\n    <pre class=\"log_json_body\">%s</pre>\n</div>",
+				string(ac.ResponseBody),
+			))
+		}
 	}
 
 	log := models.LogModel{
@@ -208,5 +244,7 @@ func (ac *ActionLog) Save() {
 	if err != nil {
 		logrus.Errorf("日志创建失败 %s", err)
 	}
-	ac.log = &log
+	ac.log = &log            // 保存日志副本
+	ac.itemList = []string{} // 清空日志信息
+	return ac.log.ID         // 返回日志ID
 }

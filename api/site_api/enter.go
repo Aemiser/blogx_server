@@ -46,18 +46,12 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 		log.SetError("参数错误", err)
 	}
 
-	log.SetItemInfo("结构体", req)
-	log.SetItemInfo("切片", []string{"a", "b"})
-	log.SetItemInfo("Map", map[string]any{"a": "1", "b": "2"})
-	log.SetItemInfo("字符串", "你好")
-	log.SetItemInfo("数字", 123)
-
+	//id := log.Save()
 	c.JSON(200, gin.H{
 
 		"code": 200,
 		"data": gin.H{
-			"name":    "site",
-			"version": "1.0.0",
+			"id": 1,
 		},
 	})
 	return

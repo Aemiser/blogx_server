@@ -2,6 +2,7 @@ package middlerware
 
 import (
 	"blogx_server/service/log_service"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,7 @@ func LogMiddleware(c *gin.Context) {
 	// 响应中间件
 	log.SetResponse(res.Body)
 	log.SetResponseHeader(res.Head)
-	log.Save()
+	id := log.MiddlewareSave()
+	fmt.Println(id)
 
 }
