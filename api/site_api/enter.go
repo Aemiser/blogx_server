@@ -36,10 +36,18 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 	log.ShowRequest()
 	log.ShowResponse()
 
+	log.SetTitle("更新站点信息")
 	var req SiteUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logrus.Errorf(err.Error())
 	}
+
+	log.SetItemInfo("结构体", req)
+	log.SetItemInfo("切片", []string{"a", "b"})
+	log.SetItemInfo("Map", map[string]any{"a": "1", "b": "2"})
+	log.SetItemInfo("字符串", "你好")
+	log.SetItemInfo("数字", 123)
+
 	c.JSON(200, gin.H{
 
 		"code": 200,
