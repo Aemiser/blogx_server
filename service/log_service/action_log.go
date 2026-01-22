@@ -96,6 +96,17 @@ func (ac *ActionLog) SetImage(src string) {
 	))
 }
 
+func (ac *ActionLog) ShowRequestHeader() {
+	ac.showRequestHeader = true
+}
+func (ac *ActionLog) ShowResponseHeader() {
+	ac.showResponseHeader = true
+}
+
+func (ac *ActionLog) SetResponseHeader(header http.Header) {
+	ac.ResponseHeader = header
+}
+
 func (ac *ActionLog) setItem(label string, value any, loglevel enum.LogLevelType) {
 	var v string
 	t := reflect.TypeOf(value)
@@ -113,16 +124,6 @@ func (ac *ActionLog) setItem(label string, value any, loglevel enum.LogLevelType
 	))
 }
 
-func (ac *ActionLog) ShowRequestHeader() {
-	ac.showRequestHeader = true
-}
-func (ac *ActionLog) ShowResponseHeader() {
-	ac.showResponseHeader = true
-}
-
-func (ac *ActionLog) SetResponseHeader(header http.Header) {
-	ac.ResponseHeader = header
-}
 func (ac *ActionLog) SetItem(label string, value any) {
 	ac.setItem(label, value, enum.LogInfoLevel)
 }
