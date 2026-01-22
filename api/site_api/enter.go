@@ -32,12 +32,14 @@ type SiteUpdateRequest struct {
 
 func (SiteApi) SiteUpdateView(c *gin.Context) {
 	log := log_service.GetLog(c)
+
+	log.ShowRequest()
+	log.ShowResponse()
+
 	var req SiteUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logrus.Errorf(err.Error())
 	}
-	fmt.Println(req)
-	log.Save()
 	c.JSON(200, gin.H{
 
 		"code": 200,
