@@ -50,6 +50,13 @@ func SuccessWithMsg(msg string, c *gin.Context) {
 	Response{SuccessCode, empty, msg}.Json(c)
 }
 
+func FailWithList(list any, count int, c *gin.Context) {
+	Response{FailValueCode, map[string]any{
+		"list":  list,
+		"count": count,
+	}, "Success"}.Json(c)
+}
+
 func FailWithData(data any, msg string, c *gin.Context) {
 	Response{FailValueCode, data, msg}.Json(c)
 }
