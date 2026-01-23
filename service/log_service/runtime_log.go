@@ -44,6 +44,12 @@ type RuntimeLog struct {
 	runtimeDateType runtimeDateType
 }
 
+func NewRuntimeLog(serviceName string, runtimeType runtimeDateType) *RuntimeLog {
+	return &RuntimeLog{
+		serviceName:     serviceName,
+		runtimeDateType: runtimeType,
+	}
+}
 func (ac *RuntimeLog) Save() {
 
 	// 判断是创建还是更新
@@ -80,12 +86,7 @@ func (ac *RuntimeLog) Save() {
 
 	return
 }
-func NewRuntimeLog(serviceName string, runtimeType runtimeDateType) *RuntimeLog {
-	return &RuntimeLog{
-		serviceName:     serviceName,
-		runtimeDateType: runtimeType,
-	}
-}
+
 func (ac *RuntimeLog) setItem(label string, value any, loglevel enum.LogLevelType) {
 	var v string
 	t := reflect.TypeOf(value)

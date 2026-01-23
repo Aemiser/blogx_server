@@ -9,3 +9,6 @@ type Model struct {
 type IDRequest struct {
 	ID uint `json:"id" form:"id" uri:"id"`
 }
+type IDListRequest struct {
+	IDList []uint `json:"IDList" form:"IDList"`
+}
