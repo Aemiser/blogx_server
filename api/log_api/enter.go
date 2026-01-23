@@ -3,6 +3,7 @@ package log_api
 import (
 	"blogx_server/common"
 	"blogx_server/common/res"
+	"blogx_server/global"
 	"blogx_server/models"
 	"blogx_server/models/enum"
 	"fmt"
@@ -53,35 +54,7 @@ func (LogApi) LogListView(c *gin.Context) {
 		Likes:        []string{"Title"},
 		Debug:        true,
 		DefaultOrder: "created_at desc",
-	},
-	)
-	//
-	//var List []models.LogModel
-	//if req.Page >= 20 {
-	//	req.Page = 1
-	//}
-	//if req.Page <= 0 {
-	//	req.Page = 1
-	//}
-	//
-	//if req.Limit == 0 || req.Limit > 100 {
-	//	req.Limit = 10
-	//}
-	//offest := (req.Page - 1) * req.Limit
-	//model := models.LogModel{
-	//	LogType:     req.LogType,
-	//	Level:       req.Level,
-	//	UserID:      req.UserID,
-	//	IP:          req.IP,
-	//	LoginStatus: req.LoginStatus,
-	//	ServiceName: req.ServiceName,
-	//}
-	//
-	//like := global.Db.Debug().Where("title like ?", fmt.Sprintf("%%%s%%", req.Key))
-	//global.Db.Debug().Preload("UserModel").Where(like).Where(model).Offset(offest).Limit(req.Limit).Find(&List)
-	//
-	//var count int64
-	//global.Db.Debug().Where(like).Where(model).Model(&models.LogModel{}).Count(&count)
+	})
 
 	var _list = make([]LogListResponse, 0)
 	for _, logModel := range list {
@@ -93,5 +66,27 @@ func (LogApi) LogListView(c *gin.Context) {
 
 	}
 	res.FailWithList(_list, int(count), c)
+	return
+}
+
+func (LogApi) LogReadView(c *gin.Context) {
+	var req models.IDRequest
+	if err := c.ShouldBindUri(&req); err != nil {
+		res.FailWithError(err, c)
+		return
+	}
+	var log models.LogModel
+	err := global.Db.Take(&log, req.ID).Error
+	if err != nil {
+		res.FailWithMsg("不存在的日志", c)
+		return
+	}
+
+	// 如果未读则修改
+	if !log.IsRead {
+		global.Db.Model(&log).Update("is_read", true)
+	}
+
+	res.SuccessWithMsg("日志读取成功", c)
 	return
 }
