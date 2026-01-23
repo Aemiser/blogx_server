@@ -1,6 +1,10 @@
 package res
 
-import "github.com/gin-gonic/gin"
+import (
+	"blogx_server/utils/validata"
+
+	"github.com/gin-gonic/gin"
+)
 
 type Code int
 
@@ -56,4 +60,9 @@ func FailWithMsg(msg string, c *gin.Context) {
 
 func FailWithCode(code Code, c *gin.Context) {
 	Response{code, empty, code.String()}.Json(c)
+}
+
+func FailWithError(err error, c *gin.Context) {
+	data, msg := validata.ValidateError(err)
+	FailWithData(data, msg, c)
 }
