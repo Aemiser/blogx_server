@@ -7,4 +7,9 @@ type Config struct {
 	Redis  Redis  `yaml:"redis"`
 	DB     DB     `yaml:"db"`
 	DB1    DB     `yaml:"db1"`
+	Site   Site   `yaml:"site"`
+	Email  Email  `yaml:"email"`
+	QQ     QQ     `yaml:"qq"`
+	QiNIu  QiNiu  `yaml:"qiniu"`
+	Ai     Ai     `yaml:"ai"`
 }
