@@ -4,6 +4,7 @@ type Config struct {
 	System System `yaml:"server"`
 	Jwt    Jwt    `yaml:"jwt"`
 	Log    Log    `yaml:"log"`
+	Redis  Redis  `yaml:"redis"`
 	DB     DB     `yaml:"db"`
 	DB1    DB     `yaml:"db1"`
 }

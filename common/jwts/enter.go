@@ -32,8 +32,8 @@ func GetToken(Claims Claims) (string, error) {
 	cla := MyClaims{
 		Claims: Claims,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Duration(global.Config.Jwt.Expire) * time.Second).Unix(), // 过期时间
-			Issuer:    global.Config.Jwt.Issuer,                                                     // 签发人
+			ExpiresAt: time.Now().Add(time.Duration(global.Config.Jwt.Expire) * time.Hour).Unix(), // 过期时间
+			Issuer:    global.Config.Jwt.Issuer,                                                   // 签发人
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, cla)

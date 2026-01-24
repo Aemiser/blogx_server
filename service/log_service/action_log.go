@@ -253,7 +253,7 @@ func (ac *ActionLog) Save() uint {
 		IP:      ip,
 		Addr:    addr,
 	}
-	err := global.Db.Create(&log).Error
+	err = global.Db.Create(&log).Error
 	if err != nil {
 		logrus.Errorf("日志创建失败 %s", err)
 	}
