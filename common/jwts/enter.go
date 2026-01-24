@@ -12,12 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const TokenExpireDuration = time.Hour * 2
-
-// const TokenExpireDuration = time.Second * 60
-
-var Secret = []byte("人生路漫漫")
-
 type Claims struct {
 	UserID   uint          `json:"userID"`
 	UserName string        `json:"userName"`

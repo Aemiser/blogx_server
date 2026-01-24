@@ -72,8 +72,12 @@ func BlackToken(token string, value BlackType) {
 func HasTokenBlack(token string) (blk BlackType, ok bool) {
 	key := fmt.Sprintf(string(RedisTokenBlack), token)
 	val, err := global.Redis.Get(context.Background(), key).Result()
-	if err != nil {
-		logrus.Errorf("token查询失败:%s", err)
+	if err != nil && val != "" {
+		logrus.Errorf("token查询失败:val:%s,err:%s", val, err)
+		return
+	}
+
+	if val == "" {
 		return
 	}
 	blk = blk.ParseBlackType(val)
