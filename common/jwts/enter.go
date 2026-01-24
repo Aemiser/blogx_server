@@ -2,6 +2,7 @@ package jwts
 
 import (
 	"blogx_server/global"
+	"blogx_server/models/enum"
 	"errors"
 	"fmt"
 	"strings"
@@ -18,9 +19,9 @@ const TokenExpireDuration = time.Hour * 2
 var Secret = []byte("人生路漫漫")
 
 type Claims struct {
-	UserID   uint   `json:"userID"`
-	UserName string `json:"userName"`
-	Role     int8   `json:"role"`
+	UserID   uint          `json:"userID"`
+	UserName string        `json:"userName"`
+	Role     enum.RoleType `json:"role"`
 }
 type MyClaims struct {
 	Claims Claims

@@ -2,6 +2,7 @@ package router
 
 import (
 	"blogx_server/api"
+	"blogx_server/middlerware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,5 +10,5 @@ import (
 func SiteRouter(r *gin.RouterGroup) {
 	app := api.App.SiteApi
 	r.GET("site", app.SiteInfoView)
-	r.PUT("site", app.SiteUpdateView)
+	r.PUT("site", middlerware.AuthMiddleware, app.SiteUpdateView)
 }
