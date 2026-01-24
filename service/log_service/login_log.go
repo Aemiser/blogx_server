@@ -1,11 +1,11 @@
 package log_service
 
 import (
+	"blogx_server/common/jwts"
 	"blogx_server/core"
 	"blogx_server/global"
 	"blogx_server/models"
 	"blogx_server/models/enum"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -15,11 +15,13 @@ func NewLoginSuccess(c *gin.Context, loginType enum.LoginType) {
 	ip := c.ClientIP()
 	addr := core.GetIpAddr(ip)
 
-	token := c.GetHeader("token")
-	fmt.Printf("token: %s\n", token)
-	//TODO :通过jwt获取用户ID,和用户信息
-	userID := uint(1)
-	username := "test"
+	claim, err := jwts.ParseTokenByGin(c)
+	userID := uint(0)
+	username := ""
+	if err == nil && claim != nil {
+		username = claim.Claims.UserName
+		userID = claim.Claims.UserID
+	}
 	global.Db.Create(&models.LogModel{
 		LogType:     enum.LoginLogType, //日志类型
 		Title:       "登录成功",

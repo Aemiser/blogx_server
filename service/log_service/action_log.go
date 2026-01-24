@@ -1,6 +1,7 @@
 package log_service
 
 import (
+	"blogx_server/common/jwts"
 	"blogx_server/core"
 	"blogx_server/global"
 	"blogx_server/models"
@@ -198,7 +199,12 @@ func (ac *ActionLog) Save() uint {
 
 	ip := ac.c.ClientIP()
 	addr := core.GetIpAddr(ip)
-	userID := uint(1)
+
+	claim, err := jwts.ParseTokenByGin(ac.c)
+	userID := uint(0)
+	if err == nil && claim != nil {
+		userID = claim.Claims.UserID
+	}
 
 	tmpItemList := []string{}
 
