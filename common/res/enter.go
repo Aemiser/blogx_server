@@ -2,6 +2,7 @@ package res
 
 import (
 	"blogx_server/utils/validata"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -50,6 +51,11 @@ func SuccessWithMsg(msg string, c *gin.Context) {
 	Response{SuccessCode, empty, msg}.Json(c)
 }
 
+func SuccessWithMsgf(c *gin.Context, format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	Response{SuccessCode, empty, msg}.Json(c)
+}
+
 func FailWithList(list any, count int, c *gin.Context) {
 	Response{FailValueCode, map[string]any{
 		"list":  list,
@@ -62,6 +68,11 @@ func FailWithData(data any, msg string, c *gin.Context) {
 }
 
 func FailWithMsg(msg string, c *gin.Context) {
+	Response{FailValueCode, empty, msg}.Json(c)
+}
+
+func FailWithMsgf(c *gin.Context, format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
 	Response{FailValueCode, empty, msg}.Json(c)
 }
 

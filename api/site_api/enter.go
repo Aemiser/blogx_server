@@ -2,6 +2,8 @@ package site_api
 
 import (
 	"blogx_server/common/res"
+	"blogx_server/conf"
+	"blogx_server/core"
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"fmt"
@@ -65,18 +67,76 @@ func (SiteApi) SiteInfoView(c *gin.Context) {
 }
 
 type SiteUpdateRequest struct {
-	Name string `json:"name" binding:"required"`
-	Age  int    `json:"age" binding:"required" label:"年龄"`
+	Name string `json:"name" uri:"name" binding:"required"`
 }
 
 func (SiteApi) SiteUpdateView(c *gin.Context) {
-	var req SiteUpdateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var ud SiteUpdateRequest
+	err := c.ShouldBindUri(&ud)
+	if err != nil {
 		res.FailWithError(err, c)
 		return
 	}
-	fmt.Println("req:", req)
-	res.SuccessWithMsg("更新成功", c)
+
+	var result any
+	switch ud.Name {
+	case "site":
+		var data conf.Site
+		err = c.ShouldBind(&data)
+		result = data
+	case "email":
+		var data conf.Email
+		err = c.ShouldBind(&data)
+		result = data
+	case "qq":
+		var data conf.QQ
+		err = c.ShouldBind(&data)
+		result = data
+	case "qiniu":
+		var data conf.QiNiu
+		err = c.ShouldBind(&data)
+		result = data
+	case "ai":
+		var data conf.Ai
+		err = c.ShouldBind(&data)
+		result = data
+	default:
+		res.FailWithMsg("不存在这个配置", c)
+		return
+	}
+	if err != nil {
+		res.FailWithError(err, c)
+		return
+	}
+	switch s := result.(type) {
+	case conf.Site:
+		// TODO :判断前端传来的配置
+		global.Config.Site = s
+	case conf.Email:
+		if s.AuthCode == "******" {
+			s.AuthCode = global.Config.Email.AuthCode
+		}
+		global.Config.Email = s
+	case conf.QQ:
+		if s.AppKey == "******" {
+			s.AppKey = global.Config.QQ.AppKey
+		}
+		fmt.Println("s:", s)
+		global.Config.QQ = s
+	case conf.QiNiu:
+		if s.SecretKey == "******" {
+			s.SecretKey = global.Config.QiNIu.SecretKey
+		}
+		global.Config.QiNIu = s
+	case conf.Ai:
+		if s.SecretKey == "******" {
+			s.SecretKey = global.Config.Ai.SecretKey
+		}
+		global.Config.Ai = s
+	}
+	// 保存修改的配置
+	core.WriteConf()
+	res.SuccessWithMsgf(c, "修改%s成功", ud.Name)
 	return
 }
 
