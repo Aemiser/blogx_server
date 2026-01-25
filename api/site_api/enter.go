@@ -6,9 +6,13 @@ import (
 	"blogx_server/core"
 	"blogx_server/global"
 	"blogx_server/middlerware"
+	"errors"
 	"fmt"
+	"os"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type SiteApi struct {
@@ -82,23 +86,24 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 	switch ud.Name {
 	case "site":
 		var data conf.Site
-		err = c.ShouldBind(&data)
+		err = c.ShouldBindJSON(&data)
 		result = data
 	case "email":
 		var data conf.Email
-		err = c.ShouldBind(&data)
+		err = c.ShouldBindJSON(&data)
 		result = data
 	case "qq":
 		var data conf.QQ
-		err = c.ShouldBind(&data)
+		err = c.ShouldBindJSON(&data)
+		fmt.Println(err)
 		result = data
 	case "qiniu":
 		var data conf.QiNiu
-		err = c.ShouldBind(&data)
+		err = c.ShouldBindJSON(&data)
 		result = data
 	case "ai":
 		var data conf.Ai
-		err = c.ShouldBind(&data)
+		err = c.ShouldBindJSON(&data)
 		result = data
 	default:
 		res.FailWithMsg("不存在这个配置", c)
@@ -111,6 +116,11 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 	switch s := result.(type) {
 	case conf.Site:
 		// TODO :判断前端传来的配置
+		err = UpdateSite(s)
+		if err != nil {
+			res.FailWithError(err, c)
+			return
+		}
 		global.Config.Site = s
 	case conf.Email:
 		if s.AuthCode == "******" {
@@ -140,6 +150,77 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 	return
 }
 
+func UpdateSite(site conf.Site) error {
+	if site.Project.Icon == "" && site.Project.WebPath == "" && site.Project.Title == "" &&
+		site.Seo.Description == "" && site.Seo.Keywords == "" {
+		return nil
+	}
+
+	if site.Project.WebPath == "" {
+		return errors.New("请配置前端地址")
+	}
+
+	file, err := os.Open(site.Project.WebPath)
+	if err != nil {
+		return errors.New(fmt.Sprintf("%s 地址不存在", site.Project.WebPath))
+	}
+	doc, err := goquery.NewDocumentFromReader(file)
+	if err != nil {
+		logrus.Errorf("goquery解析错误 %s \n", err)
+		return errors.New("文件解析失败")
+	}
+
+	if site.Project.Title != "" {
+		doc.Find("title").SetText(site.Project.Title)
+	}
+
+	if site.Project.Icon != "" {
+		sele := doc.Find("link[rel='icon']")
+		if sele.Length() > 0 {
+			// 有就修改
+			doc.Find("link[rel='icon']").SetAttr("href", site.Project.Icon)
+		} else {
+			// 没有就创建
+			doc.Find("head").AppendHtml(fmt.Sprintf("<link rel='icon' href='%s'  />", site.Project.Icon))
+		}
+	}
+
+	if site.Seo.Keywords != "" {
+		sele := doc.Find("meta[name='keywords']")
+		if sele.Length() > 0 {
+			// 有就修改
+			doc.Find("meta[name='keywords']").SetAttr("content", site.Seo.Keywords)
+		} else {
+			// 没有就创建
+			doc.Find("head").AppendHtml(fmt.Sprintf(" <meta name=\"keywords\" content=\"%s\">'  />", site.Seo.Keywords))
+		}
+	}
+
+	if site.Seo.Description != "" {
+		sele := doc.Find("meta[name='description']")
+		if sele.Length() > 0 {
+			// 有就修改
+			doc.Find("meta[name='description']").SetAttr("content", site.Seo.Description)
+		} else {
+			// 没有就创建
+			doc.Find("head").AppendHtml(fmt.Sprintf(" <meta name=\"description\" content=\"%s\">'  />", site.Seo.Description))
+		}
+	}
+
+	html, err := doc.Html()
+	if err != nil {
+		logrus.Errorf("生成html失败: %s \n", err)
+		return errors.New("生成html失败")
+	}
+
+	// 修改文件
+	err = os.WriteFile(site.Project.WebPath, []byte(html), 0666)
+	if err != nil {
+		logrus.Errorf("修改文件失败: %s \n", err)
+		return errors.New("修改文件失败")
+	}
+	return nil
+}
 func (SiteApi) SiteInfoQQView(c *gin.Context) {
 	res.SuccessWithData(global.Config.QQ.Url(), c)
 	return

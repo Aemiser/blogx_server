@@ -4,7 +4,7 @@ type SiteInfo struct {
 	Title string `json:"title" yaml:"title"`
 	Logo  string `json:"logo" yaml:"logo"`
 	Beian string `json:"beian" yaml:"beian"`
-	Mode  int8   `json:"mode" yaml:"mode"` // 1 社区模式 2 博客模式
+	Mode  int8   `json:"mode" yaml:"mode"  binding:"oneof=1 2"` // 1 社区模式 2 博客模式
 }
 type Project struct {
 	Title   string `json:"title" yaml:"title"`
