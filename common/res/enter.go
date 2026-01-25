@@ -56,6 +56,12 @@ func SuccessWithMsgf(c *gin.Context, format string, args ...any) {
 	Response{SuccessCode, empty, msg}.Json(c)
 }
 
+func SuccessWithList(list any, count int, c *gin.Context) {
+	Response{SuccessCode, map[string]any{
+		"list":  list,
+		"count": count,
+	}, "Success"}.Json(c)
+}
 func FailWithList(list any, count int, c *gin.Context) {
 	Response{FailValueCode, map[string]any{
 		"list":  list,
