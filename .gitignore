@@ -3,4 +3,4 @@ settings.yaml
 tmp
 main.go
 logs/*
-upload/ *
+uploads/ *

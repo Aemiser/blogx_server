@@ -11,8 +11,10 @@ func Run() {
 	r := gin.Default()
 	nr := r.Group("/api")
 	nr.Use(middlerware.LogMiddleware)
+	r.Static("/uploads", "uploads")
 	LogRouter(nr)
 	SiteRouter(nr)
+	IamgeRouter(nr)
 	addr := global.Config.System.Addr()
 	r.Run(addr)
 }
