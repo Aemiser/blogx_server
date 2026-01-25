@@ -25,7 +25,7 @@ func (SiteApi) SiteInfoView(c *gin.Context) {
 	fmt.Println("req:", req)
 	var data any
 	if req.Name == "site" {
-		fmt.Println("site")
+		global.Config.Site.About.Version = global.Version
 		data = global.Config.Site
 		res.SuccessWithData(data, c)
 		return
@@ -40,13 +40,21 @@ func (SiteApi) SiteInfoView(c *gin.Context) {
 
 	switch req.Name {
 	case "email":
-		data = global.Config.Email
+		result := global.Config.Email
+		result.AuthCode = "******"
+		data = result
 	case "qq":
-		data = global.Config.QQ
+		result := global.Config.QQ
+		result.AppKey = "******"
+		data = result
 	case "qiniu":
-		data = global.Config.QiNIu
+		result := global.Config.QiNIu
+		result.SecretKey = "******"
+		data = result
 	case "ai":
-		data = global.Config.Ai
+		result := global.Config.Ai
+		result.SecretKey = "******"
+		data = result
 	default:
 		res.FailWithMsg("不存在这个错误", c)
 		return
@@ -69,5 +77,10 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 	}
 	fmt.Println("req:", req)
 	res.SuccessWithMsg("更新成功", c)
+	return
+}
+
+func (SiteApi) SiteInfoQQView(c *gin.Context) {
+	res.SuccessWithData(global.Config.QQ.Url(), c)
 	return
 }

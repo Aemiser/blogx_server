@@ -18,6 +18,7 @@ type Seo struct {
 type About struct {
 	SiteDate string `json:"siteDate" yaml:"siteDate"`
 	QQ       string `json:"qq" yaml:"qq"`
+	Version  string `json:"version" yaml:"-"`
 	Wechat   string `json:"wechat" yaml:"wechat"`
 	Gitee    string `json:"gitee" yaml:"gitee"`
 	Github   string `json:"github" yaml:"github"`
