@@ -10,7 +10,7 @@ type Config struct {
 	Site    Site    `yaml:"site"`
 	Email   Email   `yaml:"email"`
 	QQ      QQ      `yaml:"qq"`
-	QiNIu   QiNiu   `yaml:"qiniu"`
+	QiNiu   QiNiu   `yaml:"qiniu"`
 	Ai      Ai      `yaml:"ai"`
 	Uploads Uploads `yaml:"uploads"`
 }

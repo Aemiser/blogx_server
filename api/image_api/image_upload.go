@@ -5,13 +5,11 @@ import (
 	"blogx_server/global"
 	"blogx_server/models"
 	"blogx_server/utils"
+	file2 "blogx_server/utils/file"
 	"fmt"
-	"io"
-	"strings"
-
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"io"
 )
 
 func (ImageApi) ImageUploadView(c *gin.Context) {
@@ -28,7 +26,7 @@ func (ImageApi) ImageUploadView(c *gin.Context) {
 		return
 	}
 
-	suffix, err := imageSuffixJudgment(filename, global.Config.Uploads.WriteList)
+	suffix, err := file2.ImageSuffixJudgment(filename, global.Config.Uploads.WriteList)
 	if err != nil {
 		res.FailWithError(err, c)
 		return
@@ -66,19 +64,4 @@ func (ImageApi) ImageUploadView(c *gin.Context) {
 	}
 	c.SaveUploadedFile(fileHeader, filePath)
 	res.Success(filePath, "图片上传成功", c)
-}
-
-func imageSuffixJudgment(fileName string, list []string) (suffix string, err error) {
-	_list := strings.Split(fileName, ".")
-	if len(_list) == 1 {
-		err = errors.New("文件格式错误")
-		return
-	}
-	suffix = _list[len(_list)-1]
-	if !utils.InList(list, suffix) {
-		err = errors.New("文件非法")
-		return
-	}
-	return
-
 }

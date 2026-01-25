@@ -9,4 +9,5 @@ type QiNiu struct {
 	Region    string `yaml:"region" json:"region"`       //	存储区域
 	Prefix    string `yaml:"prefix" json:"prefix"`       //	存储路径前缀（可选）
 	Size      int    `yaml:"size" json:"size"`           //	文件大小限制（单位：字节）
+	Expired   int    `yaml:"expired" json:"expired"`
 }

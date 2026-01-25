@@ -54,7 +54,7 @@ func (SiteApi) SiteInfoView(c *gin.Context) {
 		result.AppKey = "******"
 		data = result
 	case "qiniu":
-		result := global.Config.QiNIu
+		result := global.Config.QiNiu
 		result.SecretKey = "******"
 		data = result
 	case "ai":
@@ -135,9 +135,9 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 		global.Config.QQ = s
 	case conf.QiNiu:
 		if s.SecretKey == "******" {
-			s.SecretKey = global.Config.QiNIu.SecretKey
+			s.SecretKey = global.Config.QiNiu.SecretKey
 		}
-		global.Config.QiNIu = s
+		global.Config.QiNiu = s
 	case conf.Ai:
 		if s.SecretKey == "******" {
 			s.SecretKey = global.Config.Ai.SecretKey
