@@ -52,3 +52,8 @@ func GetCaptcha() (string, string, error) {
 func GetUUID() string {
 	return uuid.New().String()
 }
+
+// GetRandomStringInDigital 获取随机位数的数字
+func GetRandomInDigital(length int) string {
+	return base64Captcha.RandText(length, "0123456789")
+}

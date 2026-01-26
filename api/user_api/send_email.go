@@ -6,9 +6,9 @@ import (
 	"blogx_server/models"
 	"blogx_server/service/email_service"
 	"blogx_server/utils"
+	"blogx_server/utils/email_store"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mojocn/base64Captcha"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,7 +34,7 @@ func (UserApi) SendEmailView(c *gin.Context) {
 		res.FailWithError(err, c)
 		return
 	}
-	code := base64Captcha.RandText(4, "0123456789")
+	code := utils.GetRandomInDigital(4)
 	emailId := utils.GetUUID()
 	switch req.Type {
 	case SendEmailTypeRegister:
@@ -55,7 +55,10 @@ func (UserApi) SendEmailView(c *gin.Context) {
 		return
 	}
 	// 发送成功，保存captchaID
-	global.Stores.Set(emailId, code)
+	global.EmailVerifyStore.Store(emailId, email_store.EmailStoreInfo{
+		Email: req.Email,
+		Code:  code,
+	})
 	res.SuccessWithData(SendEmailResponse{
 		EmailID: emailId,
 	}, c)
