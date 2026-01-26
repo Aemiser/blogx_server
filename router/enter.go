@@ -16,6 +16,7 @@ func Run() {
 	SiteRouter(nr)
 	IamgeRouter(nr)
 	BannerRouter(nr)
+	CaptchaRouter(nr)
 	addr := global.Config.System.Addr()
 	r.Run(addr)
 }
