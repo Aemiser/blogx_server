@@ -71,6 +71,7 @@ func ListQuery[T any](model T, options Options) (list []T, count int, err error)
 	for _, preload := range options.Preloads {
 		query = query.Preload(preload)
 	}
+
 	// 查总数
 	var _count int64
 	query.Count(&_count)
@@ -89,6 +90,10 @@ func ListQuery[T any](model T, options Options) (list []T, count int, err error)
 		}
 	}
 
-	err = query.Offset(offest).Limit(limit).Find(&list).Error
+	// 排除limit 为0的情况
+	if limit != 0 {
+		query = query.Offset(offest).Limit(limit)
+	}
+	err = query.Find(&list).Error
 	return
 }

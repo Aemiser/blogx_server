@@ -7,9 +7,10 @@ import (
 	"blogx_server/utils"
 	file2 "blogx_server/utils/file"
 	"fmt"
+	"io"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"io"
 )
 
 func (ImageApi) ImageUploadView(c *gin.Context) {
