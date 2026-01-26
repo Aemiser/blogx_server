@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"image/color"
 
+	"github.com/google/uuid"
 	"github.com/mojocn/base64Captcha"
 )
 
@@ -46,4 +47,8 @@ func GetCaptcha() (string, string, error) {
 	captcha := base64Captcha.NewCaptcha(driver, global.Stores)
 	lid, lb64s, _, lerr := captcha.Generate()
 	return lid, lb64s, lerr
+}
+
+func GetUUID() string {
+	return uuid.New().String()
 }

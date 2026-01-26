@@ -9,23 +9,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// SendRegisteredCode 发送注册验证码
 func SendRegisteredCode(to, code string) error {
 	em := global.Config.Email
 	subject := fmt.Sprintf("【%s】账号注册", em.SendNickname)
 	contest := fmt.Sprintf("你正在进行邮箱注册,这是你的验证码：%s,(十分钟内有效)", code)
-	return SendEmail(to, subject, contest)
+	return sendEmail(to, subject, contest)
 
 }
 
+// SendResetCode 重置密码发送验证码
 func SendResetCode(to, code string) error {
 	em := global.Config.Email
 	subject := fmt.Sprintf("【%s】账号密码重置", em.SendNickname)
 	contest := fmt.Sprintf("你正在进行邮箱账号密码重置,这是你的验证码：%s,(十分钟内有效)", code)
-	return SendEmail(to, subject, contest)
+	return sendEmail(to, subject, contest)
 
 }
 
-func SendEmail(to, subject, content string) (err error) {
+func sendEmail(to, subject, content string) (err error) {
 	em := global.Config.Email
 
 	e := email.NewEmail()
