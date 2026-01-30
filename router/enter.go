@@ -12,8 +12,9 @@ func Run() {
 	nr := r.Group("/api")
 	nr.Use(middlerware.LogMiddleware)
 	r.Static("/uploads", "uploads")
-	LogRouter(nr)
+
 	SiteRouter(nr)
+	LogRouter(nr)
 	IamgeRouter(nr)
 	BannerRouter(nr)
 	CaptchaRouter(nr)

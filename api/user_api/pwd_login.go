@@ -5,6 +5,7 @@ import (
 	"blogx_server/common/res"
 	"blogx_server/global"
 	"blogx_server/models"
+	"blogx_server/service/log_service"
 	"blogx_server/utils/pwd"
 	"fmt"
 
@@ -17,6 +18,10 @@ type PwdLoginRequest struct {
 }
 
 func (UserApi) PwdLoginApi(c *gin.Context) {
+	log := log_service.GetLog(c)
+	log.ShowRequest()
+	log.ShowResponse()
+	log.SetItem("用户名密码登录", "")
 	var req PwdLoginRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {

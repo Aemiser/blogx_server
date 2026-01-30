@@ -257,6 +257,7 @@ func (ac *ActionLog) Save() uint {
 	if err != nil {
 		logrus.Errorf("日志创建失败 %s", err)
 	}
+	logrus.Infof("日志创建成功")
 	ac.log = &log            // 保存日志副本
 	ac.itemList = []string{} // 清空日志信息
 	return ac.log.ID         // 返回日志ID

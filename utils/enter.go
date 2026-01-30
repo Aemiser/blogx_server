@@ -57,3 +57,7 @@ func GetUUID() string {
 func GetRandomInDigital(length int) string {
 	return base64Captcha.RandText(length, "0123456789")
 }
+
+func GetRandomWord(length int) string {
+	return base64Captcha.RandText(length, "0123456789qwertyuiopasdfghjklzxcvbnm")
+}
