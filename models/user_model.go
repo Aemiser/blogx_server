@@ -2,6 +2,7 @@ package models
 
 import (
 	"blogx_server/models/enum"
+	"math"
 	"time"
 )
 
@@ -18,6 +19,18 @@ type UserModel struct {
 	OpenID          string                  `gorm:"size:64" json:"openID"` //第三方登入ID
 	Role            enum.RoleType           `json:"role"`                  //角色:   1 管理员 2 普通用户 3 访客
 	UserConfigModel *UserConfigModel        `gorm:"foreignKey:UserID" json:"-"`
+	IP              string                  `gorm:"size:32" json:"ip"`
+	Addr            string                  `gorm:"size:32" json:"addr"`
+}
+
+//
+//func (u *UserModel) AfterCreate(tx *gorm.DB) (err error) {
+//	return tx.Create(())
+//}
+
+func (u *UserModel) GetCodeAge() uint {
+	sub := time.Now().Sub(u.CreatedAt)
+	return uint(math.Ceil(sub.Hours() / 24 / 365))
 }
 
 type UserConfigModel struct {

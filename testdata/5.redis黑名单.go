@@ -24,6 +24,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	fmt.Println(token)
 	//token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJDbGFpbXMiOnsidXNlcklEIjowLCJ1c2VyTmFtZSI6InRhb3RhbyIsInJvbGUiOjB9LCJleHAiOjE3NjkyNzg1MzksImlzcyI6InRhb3RhbyJ9.bUXI3FKovMSrWRZC5ihcPWmSN-hoLx6ew8sxiLkvMJw"
 	//redis_jwt.BlackToken(token, redis_jwt.AdminBlackType)

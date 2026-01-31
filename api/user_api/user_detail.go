@@ -7,7 +7,6 @@ import (
 	"blogx_server/models"
 	"blogx_server/models/enum"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +21,7 @@ type UserDetailResponse struct {
 	Abstract       string                  `json:"abstract"`
 	Email          string                  `gorm:"size:256" json:"email"`
 	RegisterSource enum.RegisterSourceType `json:"registerSource"` //注册来源
-	CodeAge        int                     `json:"codeAge"`        //码龄
+	CodeAge        uint                    `json:"codeAge"`        //码龄
 	models.UserConfigModel
 }
 
@@ -35,9 +34,6 @@ func (UserApi) UserDetailView(c *gin.Context) {
 		res.FailWithMsg("用户不存在", c)
 		return
 	}
-	// 计算码龄
-	sub := time.Now().Sub(userModel.CreatedAt)
-	CodeAge := int(math.Ceil(sub.Hours() / 24 / 365))
 
 	var data = UserDetailResponse{
 		ID:             userModel.ID,
@@ -48,7 +44,7 @@ func (UserApi) UserDetailView(c *gin.Context) {
 		Abstract:       userModel.Abstract,
 		Email:          userModel.Email,
 		RegisterSource: userModel.RegisterSource,
-		CodeAge:        CodeAge,
+		CodeAge:        userModel.GetCodeAge(),
 	}
 
 	if userModel.UserConfigModel != nil {
