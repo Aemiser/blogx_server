@@ -6,6 +6,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/models"
 	"blogx_server/service/log_service"
+	"blogx_server/service/user_service"
 	"blogx_server/utils/pwd"
 	"fmt"
 
@@ -56,5 +57,6 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 		Role:     user.Role,
 	})
 
+	user_service.NewUserService(&user).UserLogin(c)
 	res.SuccessWithData(token, c)
 }

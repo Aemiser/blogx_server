@@ -6,6 +6,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/user_service"
 	"blogx_server/utils"
 	"blogx_server/utils/email_store"
 	"blogx_server/utils/pwd"
@@ -81,6 +82,7 @@ func (UserApi) RegisterEmail(c *gin.Context) {
 		res.FailWithMsg("邮箱登入失败", c)
 		return
 	}
-
+	// 记入登入日志
+	user_service.NewUserService(&newUser).UserLogin(c)
 	res.SuccessWithData(token, c)
 }
