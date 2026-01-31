@@ -25,6 +25,7 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 	c.Set("claims", claims)
+	fmt.Println("中间件claims:", claims)
 }
 
 func AdminMiddleware(c *gin.Context) {

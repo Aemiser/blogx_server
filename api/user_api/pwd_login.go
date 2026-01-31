@@ -55,5 +55,6 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 		UserName: user.Username,
 		Role:     user.Role,
 	})
+
 	res.SuccessWithData(token, c)
 }

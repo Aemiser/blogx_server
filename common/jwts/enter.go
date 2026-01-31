@@ -72,3 +72,17 @@ func ParseTokenByGin(c *gin.Context) (*MyClaims, error) {
 	}
 	return ParseToken(tokenString)
 }
+
+func GetClaimsByGin(c *gin.Context) (claims *MyClaims) {
+	_claims, ok := c.Get("claims")
+	fmt.Println(_claims, ok)
+	if !ok {
+		return
+	}
+	claims, ok = _claims.(*MyClaims)
+	fmt.Println(claims, ok)
+	if !ok {
+		return
+	}
+	return
+}
