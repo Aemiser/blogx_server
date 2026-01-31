@@ -14,5 +14,6 @@ func UserRouter(r *gin.RouterGroup) {
 	r.POST("user/qq", app.QQLoginView)
 	r.POST("user/login", middlerware.CaptchaMiddleware, app.PwdLoginApi)
 	r.GET("user/detail", middlerware.AuthMiddleware, app.UserDetailView)
+	r.GET("user/login", middlerware.AuthMiddleware, app.UserLoginListView)
 	r.GET("user/base", app.UserBaseInfoView)
 }
