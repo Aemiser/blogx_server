@@ -16,15 +16,15 @@ type UserLoginListRequest struct {
 	UserID    uint   `json:"userID" form:"userID"`
 	Ip        string `json:"ip" form:"ip"`
 	Addr      string `json:"addr" form:"addr"`
-	StartTime int64  `json:"startTime" form:"startTime"` // 起止时间的时间戳
-	EndTime   int64  `json:"endTime" form:"endTime"`
+	StartTime string `json:"startTime" form:"startTime"` // 起止时间的时间戳
+	EndTime   string `json:"endTime" form:"endTime"`
 	Type      int8   `json:"type" form:"type" binding:"required,oneof=1 2"`
 }
 
 type UserLoginListResponse struct {
 	models.UserLoginModel
-	UserNickname string `json:"userNickname"`
-	UserAvatar   string `json:"userAvatar"`
+	UserNickname string `json:"userNickname,omitempty"`
+	UserAvatar   string `json:"userAvatar,omitempty"`
 }
 
 func (UserApi) UserLoginListView(c *gin.Context) {
@@ -41,13 +41,21 @@ func (UserApi) UserLoginListView(c *gin.Context) {
 
 	var query = global.Db.Where("")
 
-	if req.StartTime > 0 {
-		t := time.Unix(req.StartTime, 0)
-		query = query.Where("created_at >= ?", t)
+	if req.StartTime > "" {
+		_, err = time.Parse("2006-01-02 15:04:05", req.StartTime)
+		if err != nil {
+			res.FailWithMsg("起始时间格式错误", c)
+			return
+		}
+		query = query.Where("created_at >= ?", req.StartTime)
 	}
-	if req.EndTime > 0 {
-		t := time.Unix(req.EndTime, 0)
-		query = query.Where("created_at <= ?", t)
+	if req.EndTime > "" {
+		_, err = time.Parse("2006-01-02 15:04:05", req.EndTime)
+		if err != nil {
+			res.FailWithMsg("截至时间格式错误", c)
+			return
+		}
+		query = query.Where("created_at <= ?", req.EndTime)
 	}
 	var preloads []string
 	if req.Type == 2 {
