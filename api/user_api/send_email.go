@@ -69,10 +69,7 @@ func (UserApi) SendEmailView(c *gin.Context) {
 		return
 	}
 	// 发送成功，保存captchaID
-	global.EmailVerifyStore.Store(emailId, email_store.EmailStoreInfo{
-		Email: req.Email,
-		Code:  code,
-	})
+	email_store.Set(emailId, req.Email, code)
 	res.SuccessWithData(SendEmailResponse{
 		EmailID: emailId,
 	}, c)

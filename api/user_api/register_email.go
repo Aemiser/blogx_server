@@ -8,7 +8,6 @@ import (
 	"blogx_server/models/enum"
 	"blogx_server/service/user_service"
 	"blogx_server/utils"
-	"blogx_server/utils/email_store"
 	"blogx_server/utils/pwd"
 	"fmt"
 
@@ -35,21 +34,9 @@ func (UserApi) RegisterEmail(c *gin.Context) {
 		return
 	}
 
-	value, ok := global.EmailVerifyStore.Load(req.EmailID)
-	if !ok {
-		res.FailWithMsg("邮箱验证失败", c)
-		return
-	}
+	_email, _ := c.Get("email")
+	email := _email.(string)
 
-	info, ok := value.(email_store.EmailStoreInfo)
-	if !ok {
-		res.FailWithMsg("邮箱验证失败", c)
-		return
-	}
-	if info.Code != req.Code {
-		res.FailWithMsg("邮箱验证失败", c)
-		return
-	}
 	uname := fmt.Sprintf("b_%s", utils.GetRandomInDigital(4))
 	unickname := fmt.Sprintf("邮箱用户%s", uname)
 	pwd, err := pwd.GenerateHashPassword(req.Pwd)
@@ -66,7 +53,7 @@ func (UserApi) RegisterEmail(c *gin.Context) {
 		Nickname:       unickname,
 		RegisterSource: enum.RegisterSourceTypeEmail,
 		Password:       pwd,
-		Email:          info.Email,
+		Email:          email,
 		Role:           enum.UserRole,
 	}
 
