@@ -30,6 +30,11 @@ func (UserApi) RegisterEmail(c *gin.Context) {
 		return
 	}
 
+	if !global.Config.Site.Login.EmailLogin {
+		res.FailWithMsg("站点未启用邮箱注册", c)
+		return
+	}
+
 	value, ok := global.EmailVerifyStore.Load(req.EmailID)
 	if !ok {
 		res.FailWithMsg("邮箱验证失败", c)
