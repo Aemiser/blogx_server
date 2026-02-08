@@ -33,7 +33,6 @@ func EmailVerifyMiddleware(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
 	info, ok := email_store.Verify(cr.EmailID, cr.EmailCode)
 	if !ok {
 		res.FailWithMsg("邮箱验证失败", c)

@@ -16,10 +16,11 @@ import (
 const (
 	SendEmailTypeRegister int8 = 1
 	SendEmailTypeReset    int8 = 2
+	SendEmailTypeBind     int8 = 3
 )
 
 type SendEmailRequest struct {
-	Type  int8   `json:"type" binding:"oneof=1 2" `
+	Type  int8   `json:"type" binding:"oneof=1 2 3" ` // 1注册 2重置密码 3绑定邮箱
 	Email string `json:"email" binding:"required" `
 }
 
@@ -62,6 +63,15 @@ func (UserApi) SendEmailView(c *gin.Context) {
 			return
 		}
 		err = email_service.SendRegisteredCode(req.Email, code)
+	case SendEmailTypeBind:
+		// 检查邮箱是否存在
+		var model models.UserModel
+		err = global.Db.Take(&model, "email = ?", req.Email).Error
+		if err == nil {
+			res.FailWithMsg("邮箱已存在", c)
+			return
+		}
+		err = email_service.SendBindCode(req.Email, code)
 	}
 	if err != nil {
 		logrus.Errorf("邮件发送失败：%s", err.Error())

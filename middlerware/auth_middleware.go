@@ -5,13 +5,11 @@ import (
 	"blogx_server/common/res"
 	"blogx_server/models/enum"
 	"blogx_server/service/redis_service/redis_jwt"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
 func AuthMiddleware(c *gin.Context) {
-	fmt.Println("AuthMiddleware")
 	claims, err := jwts.ParseTokenByGin(c)
 	if err != nil {
 		res.FailWithError(err, c)
@@ -25,7 +23,6 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 	c.Set("claims", claims)
-	fmt.Println("中间件claims:", claims)
 }
 
 func AdminMiddleware(c *gin.Context) {
