@@ -4,6 +4,7 @@ import (
 	"blogx_server/common/jwts"
 	"blogx_server/common/res"
 	"blogx_server/global"
+	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/service/log_service"
 	"blogx_server/service/user_service"
@@ -23,12 +24,13 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 	log.ShowRequest()
 	log.ShowResponse()
 	log.SetItem("用户名密码登录", "")
-	var req PwdLoginRequest
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		res.FailWithError(err, c)
-		return
-	}
+	//var req PwdLoginRequest
+	//err := c.ShouldBindJSON(&req)
+	//if err != nil {
+	//	res.FailWithError(err, c)
+	//	return
+	//}
+	req := middlerware.GetBind[PwdLoginRequest](c)
 
 	if !global.Config.Site.Login.UsernamePwdLogin {
 		res.FailWithMsg("未启用用户名密码登录", c)
@@ -36,7 +38,7 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 	}
 	// 查库
 	var user models.UserModel
-	err = global.Db.Take(&user, "(username = ? or email = ?) and password <> ''", req.Val, req.Val).Error
+	err := global.Db.Take(&user, "(username = ? or email = ?) and password <> ''", req.Val, req.Val).Error
 	if err != nil {
 		res.FailWithMsg("用户名或密码错误", c)
 		return
