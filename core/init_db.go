@@ -2,6 +2,7 @@ package core
 
 import (
 	"blogx_server/global"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -10,8 +11,8 @@ import (
 )
 
 func InitDB() *gorm.DB {
-	dc := global.Config.DB  //读
-	dc1 := global.Config.DB //写
+	dc := global.Config.DB   //读
+	dc1 := global.Config.DB1 //写
 
 	//TODO pgsql的支持
 
@@ -31,6 +32,7 @@ func InitDB() *gorm.DB {
 	logrus.Infof("数据库连接成功")
 
 	if !dc.Empty() {
+		fmt.Println("读写库存在")
 		// 读写库存在，则配置读写分离
 		db.Use(dbresolver.Register(dbresolver.Config{
 			Sources:  []gorm.Dialector{mysql.Open(dc1.GetDSN())}, // 写
