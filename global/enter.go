@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/mojocn/base64Captcha"
+	"github.com/olivere/elastic/v7"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -19,4 +20,5 @@ var (
 	Redis            *redis.Client
 	Stores           = base64Captcha.DefaultMemStore
 	EmailVerifyStore = sync.Map{}
+	ESClient         *elastic.Client
 )
