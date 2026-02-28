@@ -13,6 +13,7 @@ type River struct {
 	Rules    []*rule.Rule `yaml:"rule"`
 	BulkSize int          `yaml:"bulk_size"`
 	Enable   bool         `yaml:"enable"`
+	Debug    bool         `yaml:"debug"` // 添加调试开关
 }
 
 type RiverSource struct {
