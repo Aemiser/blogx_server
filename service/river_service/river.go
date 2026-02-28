@@ -297,18 +297,7 @@ func (r *River) Run() error {
 	if err := r.canal.RunFrom(pos); err != nil {
 		log.Errorf("start canal err %v, pos: %v", err, pos)
 		log.Errorf("MySQL config - Addr: %s, User: %s", global.Config.DB[0].Addr(), global.Config.DB[0].User)
-
-		// 如果是连接错误，尝试重新加载位置信息
-		if pos.Name == "" {
-			log.Info("Trying to reset binlog position...")
-			newPos := mysql.Position{Name: "mysql-bin.000001", Pos: 4}
-			if err2 := r.canal.RunFrom(newPos); err2 != nil {
-				log.Errorf("Retry with default position also failed: %v", err2)
-				return errors.Trace(err)
-			}
-			log.Info("Started successfully with default position")
-			return nil
-		}
+		log.Errorf("Canal config details - ServerID: %d, Flavor: %s", global.Config.River.ServerID, global.Config.River.Flavor)
 		return errors.Trace(err)
 	}
 
@@ -388,6 +377,7 @@ func (r *River) testMySQLConnection() error {
 	// 尝试执行简单查询
 	_, err = testCanal.Execute("SELECT 1")
 	if err != nil {
+		log.Errorf("MySQL query test failed: %v", err)
 		return errors.Trace(err)
 	}
 

@@ -86,6 +86,15 @@ func (m *masterInfo) Position() mysql.Position {
 	m.RLock()
 	defer m.RUnlock()
 
+	// 如果没有有效的位置信息，返回已知的正确位置
+	if m.Name == "" || m.Pos == 0 {
+		log.Infof("Using default binlog position: mysql-bin.000012:154")
+		return mysql.Position{
+			Name: "mysql-bin.000012",
+			Pos:  154,
+		}
+	}
+
 	return mysql.Position{
 		Name: m.Name,
 		Pos:  m.Pos,
