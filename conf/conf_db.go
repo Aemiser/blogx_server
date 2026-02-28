@@ -30,3 +30,7 @@ func (d DB) GetDSN() string {
 func (d DB) Empty() bool {
 	return d.Host == "" && d.Port == 0 && d.User == "" && d.Password == "" && d.DBName == ""
 }
+
+func (d DB) Addr() string {
+	return fmt.Sprintf("%s:%d", d.Host, d.Port)
+}
