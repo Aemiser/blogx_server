@@ -13,6 +13,8 @@ import (
 	"github.com/juju/errors"
 	"github.com/siddontang/go-log/log"
 	"github.com/siddontang/go-mysql/canal"
+	"github.com/siddontang/go-mysql/mysql"
+	"github.com/siddontang/go-mysql/replication"
 )
 
 // ErrRuleNotExist is the error if rule is not defined.
@@ -286,8 +288,27 @@ func (r *River) Run() error {
 	go r.syncLoop()
 
 	pos := r.master.Position()
+	// 添加连接测试
+	if err := r.testMySQLConnection(); err != nil {
+		log.Errorf("MySQL connection test failed: %v", err)
+		return errors.Trace(err)
+	}
+
 	if err := r.canal.RunFrom(pos); err != nil {
-		log.Errorf("start canal err %v", err)
+		log.Errorf("start canal err %v, pos: %v", err, pos)
+		log.Errorf("MySQL config - Addr: %s, User: %s", global.Config.DB[0].Addr(), global.Config.DB[0].User)
+
+		// 如果是连接错误，尝试重新加载位置信息
+		if pos.Name == "" {
+			log.Info("Trying to reset binlog position...")
+			newPos := mysql.Position{Name: "mysql-bin.000001", Pos: 4}
+			if err2 := r.canal.RunFrom(newPos); err2 != nil {
+				log.Errorf("Retry with default position also failed: %v", err2)
+				return errors.Trace(err)
+			}
+			log.Info("Started successfully with default position")
+			return nil
+		}
 		return errors.Trace(err)
 	}
 
@@ -328,4 +349,48 @@ func buildTable(table string) string {
 		return "." + table
 	}
 	return table
+}
+
+// testMySQLConnection 测试 MySQL 连接
+type dummyHandler struct{}
+
+func (h *dummyHandler) OnRotate(*replication.RotateEvent) error               { return nil }
+func (h *dummyHandler) OnTableChanged(string, string) error                   { return nil }
+func (h *dummyHandler) OnDDL(mysql.Position, *replication.QueryEvent) error   { return nil }
+func (h *dummyHandler) OnXID(mysql.Position) error                            { return nil }
+func (h *dummyHandler) OnRow(*canal.RowsEvent) error                          { return nil }
+func (h *dummyHandler) OnGTID(mysql.GTIDSet) error                            { return nil }
+func (h *dummyHandler) OnPosSynced(mysql.Position, mysql.GTIDSet, bool) error { return nil }
+func (h *dummyHandler) String() string                                        { return "DummyHandler" }
+
+func (r *River) testMySQLConnection() error {
+	log.Infof("Testing MySQL connection to %s", global.Config.DB[0].Addr())
+
+	// 创建一个简单的 canal 实例来测试连接
+	cfg := canal.NewDefaultConfig()
+	db := global.Config.DB[0]
+	cfg.Addr = db.Addr()
+	cfg.User = db.User
+	cfg.Password = db.Password
+	cfg.Charset = "utf8mb4"
+
+	// 只测试连接，不监听任何表
+	cfg.IncludeTableRegex = []string{"^$"} // 匹配空字符串，实际上不会监听任何表
+
+	testCanal, err := canal.NewCanal(cfg)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	defer testCanal.Close()
+
+	testCanal.SetEventHandler(&dummyHandler{})
+
+	// 尝试执行简单查询
+	_, err = testCanal.Execute("SELECT 1")
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	log.Info("MySQL connection test successful")
+	return nil
 }
