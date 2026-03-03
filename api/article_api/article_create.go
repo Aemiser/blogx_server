@@ -8,7 +8,11 @@ import (
 	"blogx_server/models"
 	"blogx_server/models/ctype"
 	"blogx_server/models/enum"
+	"blogx_server/utils/markdown"
+	"bytes"
+	"fmt"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,7 +38,38 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 	}
 
 	// 判断分类id是不是自己创建的
+	var category models.CategoryModel
+	if cr.CategoryID != nil {
+		err = global.Db.Take(&category, "id  = ? and user_id = ?", cr.CategoryID, user.ID).Error
+		if err != nil {
+			res.FailWithMsg("分类不存在", c)
+			return
+		}
+	}
 	// 防止文章正文xss注入
+	contentDoc, err := goquery.NewDocumentFromReader(bytes.NewReader([]byte(cr.Content)))
+	if err != nil {
+		res.FailWithMsg("正文解析错误", c)
+		return
+	}
+	contentDoc.Find("script").Remove()
+	contentDoc.Find("img").Remove()
+	contentDoc.Find("iframe").Remove()
+	cr.Content = contentDoc.Text()
+
+	// 如果不传简介，从正文中取前30个字符
+	html := markdown.MdToHtml(cr.Content)
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader([]byte(html)))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	htmlText := doc.Text()
+	if len(htmlText) > 200 {
+		cr.Abstract = htmlText[:200]
+		cr.Abstract = string([]rune(htmlText)[:200])
+	}
 	// 正文内容图片转存
 	var article = models.ArticleModel{
 		Title:       cr.Title,
