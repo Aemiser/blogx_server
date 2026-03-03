@@ -70,7 +70,10 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 		cr.Abstract = htmlText[:200]
 		cr.Abstract = string([]rune(htmlText)[:200])
 	}
+
 	// 正文内容图片转存
+	// 1.图片过多，同步做，接口耗时高，异步做，保存时间不确定，后续要对文章进行更新，写接口让前端做，没有保存完不能提交文章
+
 	var article = models.ArticleModel{
 		Title:       cr.Title,
 		Abstract:    cr.Abstract,

@@ -2,6 +2,7 @@ package router
 
 import (
 	"blogx_server/api"
+	"blogx_server/api/image_api"
 	"blogx_server/middlerware"
 
 	"github.com/gin-gonic/gin"
@@ -13,5 +14,6 @@ func IamgeRouter(r *gin.RouterGroup) {
 	r.POST("images/qiniu", middlerware.AuthMiddleware, app.QiNiuGenToken)
 	r.GET("images", middlerware.AdminMiddleware, app.ImageListView)
 	r.DELETE("images", middlerware.AdminMiddleware, app.ImageRemoveView)
+	r.POST("images/transfer", middlerware.AuthMiddleware, middlerware.BindJsonMiddlerware[image_api.ImageTransferRequest], app.ImageTransferView)
 
 }
