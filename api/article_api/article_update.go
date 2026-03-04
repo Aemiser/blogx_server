@@ -9,10 +9,8 @@ import (
 	"blogx_server/models/ctype"
 	"blogx_server/models/enum"
 	"blogx_server/utils/markdown"
-	"bytes"
-	"fmt"
+	"blogx_server/utils/xss"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,6 +33,14 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 	if err != nil {
 		res.FailWithMsg("用户不存在", c)
 		return
+	}
+
+	// 判断模式
+	if global.Config.Site.SiteInfo.Mode == 2 {
+		if user.Role != enum.AdminRole {
+			res.FailWithMsg("博客模式下，用户无法更新文章", c)
+			return
+		}
 	}
 
 	// 查找文章
@@ -61,31 +67,14 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 	}
 
 	// 防止文章正文xss注入
-	contentDoc, err := goquery.NewDocumentFromReader(bytes.NewReader([]byte(cr.Content)))
-	if err != nil {
-		res.FailWithMsg("正文解析错误", c)
-		return
-	}
-	contentDoc.Find("script").Remove()
-	contentDoc.Find("img").Remove()
-	contentDoc.Find("iframe").Remove()
-	cr.Content = contentDoc.Text()
+	cr.Content = xss.Filter(cr.Content)
 
 	// 如果不传简介，从正文中取前30个字符
 	if cr.Abstract == "" {
-		html := markdown.MdToHtml(cr.Content)
-		doc, err := goquery.NewDocumentFromReader(bytes.NewReader([]byte(html)))
+		cr.Content, err = markdown.ExtractContent(cr.Content, 200)
 		if err != nil {
-			fmt.Println(err)
+			res.FailWithMsg("文章正文解析失败", c)
 			return
-		}
-
-		htmlText := doc.Text()
-		// 将字符串转换为 rune 切片来获取实际的字符数
-		cr.Abstract = htmlText
-		runes := []rune(htmlText)
-		if len(runes) > 200 {
-			cr.Abstract = string(runes[:200])
 		}
 	}
 

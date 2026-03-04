@@ -1,7 +1,7 @@
 .idea
 settings.yaml
+settingscopy.yaml
 tmp
 main.go
 logs/*
 uploads/*
-settingscopy.yaml
