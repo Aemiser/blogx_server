@@ -58,20 +58,21 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 	cr.Content = contentDoc.Text()
 
 	// 如果不传简介，从正文中取前30个字符
-	html := markdown.MdToHtml(cr.Content)
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader([]byte(html)))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	if cr.Abstract == "" {
+		html := markdown.MdToHtml(cr.Content)
+		doc, err := goquery.NewDocumentFromReader(bytes.NewReader([]byte(html)))
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	htmlText := doc.Text()
-	// 将字符串转换为 rune 切片来获取实际的字符数
-	runes := []rune(htmlText)
-	if len(runes) > 200 {
-		cr.Abstract = string(runes[:200])
-	} else {
+		htmlText := doc.Text()
 		cr.Abstract = htmlText
+		// 将字符串转换为 rune 切片来获取实际的字符数
+		runes := []rune(htmlText)
+		if len(runes) > 200 {
+			cr.Abstract = string(runes[:200])
+		}
 	}
 
 	// 正文内容图片转存
