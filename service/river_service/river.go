@@ -294,6 +294,12 @@ func (r *River) Run() error {
 		return errors.Trace(err)
 	}
 
+	log.Infof("准备从 binlog 位置启动：%+v", pos)
+	log.Infof("配置的规则数量：%d", len(r.rules))
+	for key, rule := range r.rules {
+		log.Infof("同步规则：%s -> ES index: %s, type: %s", key, rule.Index, rule.Type)
+	}
+
 	if err := r.canal.RunFrom(pos); err != nil {
 		log.Errorf("start canal err %v, pos: %v", err, pos)
 		log.Errorf("MySQL config - Addr: %s, User: %s", global.Config.DB[0].Addr(), global.Config.DB[0].User)

@@ -3,7 +3,7 @@ package enum
 type ArticleStatus int8
 
 const (
-	ArticleDraft     ArticleStatus = 0 // 草稿
-	ArticleExamine   ArticleStatus = 1 // 审核中
-	ArticlePublished ArticleStatus = 2 // 已发布
+	ArticleDraft     ArticleStatus = 1 // 草稿
+	ArticleExamine   ArticleStatus = 2 // 审核中
+	ArticlePublished ArticleStatus = 3 // 已发布
 )

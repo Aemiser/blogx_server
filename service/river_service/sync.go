@@ -67,8 +67,10 @@ func (h *eventHandler) OnXID(nextPos mysql.Position) error {
 }
 
 func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
+	log.Infof("收到 binlog 事件：action=%s, schema=%s, table=%s, rows=%d", e.Action, e.Table.Schema, e.Table.Name, len(e.Rows))
 	rule, ok := h.r.rules[ruleKey(e.Table.Schema, e.Table.Name)]
 	if !ok {
+		log.Warnf("未找到对应的规则，忽略事件：schema=%s, table=%s", e.Table.Schema, e.Table.Name)
 		return nil
 	}
 
@@ -87,9 +89,11 @@ func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
 
 	if err != nil {
 		h.r.cancel()
+		log.Errorf("make %s ES request err %v, close sync", e.Action, err)
 		return errors.Errorf("make %s ES request err %v, close sync", e.Action, err)
 	}
 
+	log.Infof("准备同步 %d 条请求到 ES, action=%s", len(reqs), e.Action)
 	h.r.syncCh <- reqs
 
 	return h.r.ctx.Err()
@@ -464,6 +468,8 @@ func (r *River) doBulk(reqs []*elastic.BulkRequest) error {
 		return nil
 	}
 
+	log.Infof("开始批量同步 %d 条请求到 ES", len(reqs))
+
 	if resp, err := r.es.Bulk(reqs); err != nil {
 		log.Errorf("sync docs err %v after binlog %s", err, r.canal.SyncedPosition())
 		return errors.Trace(err)
@@ -473,9 +479,13 @@ func (r *River) doBulk(reqs []*elastic.BulkRequest) error {
 				if len(item.Error) > 0 {
 					log.Errorf("%s index: %s, type: %s, id: %s, status: %d, error: %s",
 						action, item.Index, item.Type, item.ID, item.Status, item.Error)
+				} else {
+					log.Infof("ES 操作成功：%s, index: %s, id: %s", action, item.Index, item.ID)
 				}
 			}
 		}
+	} else {
+		log.Infof("批量同步成功，处理了 %d 个索引项", len(resp.Items))
 	}
 
 	return nil

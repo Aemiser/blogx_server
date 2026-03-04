@@ -66,9 +66,12 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 	}
 
 	htmlText := doc.Text()
-	if len(htmlText) > 200 {
-		cr.Abstract = htmlText[:200]
-		cr.Abstract = string([]rune(htmlText)[:200])
+	// 将字符串转换为 rune 切片来获取实际的字符数
+	runes := []rune(htmlText)
+	if len(runes) > 200 {
+		cr.Abstract = string(runes[:200])
+	} else {
+		cr.Abstract = htmlText
 	}
 
 	// 正文内容图片转存
@@ -86,7 +89,7 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 		Status:      cr.Status,
 	}
 
-	if global.Config.Site.Article.NoExamine {
+	if cr.Status == 2 && global.Config.Site.Article.NoExamine {
 		article.Status = enum.ArticlePublished
 	}
 
