@@ -4,18 +4,21 @@ import (
 	"blogx_server/common"
 	"blogx_server/common/jwts"
 	"blogx_server/common/res"
+	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/utils/sql"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ArticleListRequest struct {
 	common.PageInfo
-	Type       int8  `json:"type" binding:"required,oneof=1 2 3 "` // 1看别人的 2看自己的 3管理员看
-	UserID     uint  `json:"userID"`
-	CategoryID *uint `json:"categoryID"`
+	Type       int8  `form:"type" binding:"required,oneof=1 2 3 "` // 1看别人的 2看自己的 3管理员看
+	UserID     uint  `form:"userID"`
+	CategoryID *uint `form:"categoryID"`
 	Status     enum.ArticleStatus
 }
 
@@ -27,6 +30,20 @@ type ArticleListResponse struct {
 
 func (ArticleApi) ArticleListView(c *gin.Context) {
 	cr := middlerware.GetBind[ArticleListRequest](c)
+
+	var topArticleIDList []uint // [1,2,3] => (1,2,3)
+	// 排序白名单字段
+	var OrderColumnMap = map[string]bool{
+		"look_count desc":    true,
+		"digg_count desc":    true,
+		"comment_count desc": true,
+		"collect_count desc": true,
+		"look_count asc":     true,
+		"digg_count asc":     true,
+		"comment_count asc":  true,
+		"collect_count asc":  true,
+	}
+
 	switch cr.Type {
 	case 1:
 		// 查别人 用户ID 必填
@@ -40,6 +57,7 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 			return
 		}
 		cr.Status = 0
+		cr.Order = ""
 	case 2:
 		// 查自己
 		claims, err := jwts.ParseTokenByGin(c)
@@ -56,20 +74,60 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 			return
 		}
 	}
+
+	// 对于类型2,3而言存在order判断
+	if cr.Order != "" {
+		_, ok := OrderColumnMap[cr.Order]
+		if !ok {
+			res.FailWithMsg("排序字段错误", c)
+			return
+		}
+	}
+
+	// 置顶文章处理
+	var userTopMap = map[uint]bool{}
+	var AdminTopMap = map[uint]bool{}
+	if cr.UserID != 0 {
+		var userTopArticleList []models.UserTopArticleModel
+		// 这里查询出来的置顶文章按照时间升序，在下面的文章列表查询中，即可把这些置顶的文章按照升序排列到最前面
+		global.Db.Preload("UserModel").Order("created_at").Take(&userTopArticleList, "user_id = ?", cr.UserID)
+
+		for _, i2 := range userTopArticleList {
+			topArticleIDList = append(topArticleIDList, i2.ArticleID)
+			if i2.UserModel.Role == enum.AdminRole {
+				AdminTopMap[i2.ArticleID] = true
+			}
+			userTopMap[i2.ArticleID] = true
+		}
+	}
+
+	// 判断topArticleIDList为空的情况
+	var option = common.Options{
+		Likes:        []string{"title"},
+		PageInfo:     cr.PageInfo,
+		DefaultOrder: "created_at desc",
+	}
+
+	if len(topArticleIDList) > 0 {
+		// 这里通过函数，把[3,4,5] => string类型的  id = 3 desc,id = 4 desc,id = 5 desc,这里置顶的顺序按照最新时间降序，在上面获取topArticleIDList列表的sql语句中已经实现了
+		option.DefaultOrder = fmt.Sprintf("%s,created_at desc", sql.CoverSliceOrderSql(topArticleIDList))
+	}
+
+	// 文章列表查询
 	_list, count, _ := common.ListQuery(models.ArticleModel{
 		UserID:     cr.UserID,
 		CategoryID: cr.CategoryID,
 		Status:     cr.Status,
-	}, common.Options{
-		Likes:    []string{"title"},
-		PageInfo: cr.PageInfo,
-	})
+	}, option)
 
+	// 响应数据封装
 	var list = make([]ArticleListResponse, 0)
 	for _, model := range _list {
 		model.Content = ""
 		list = append(list, ArticleListResponse{
 			ArticleModel: model,
+			UserTop:      userTopMap[model.ID],
+			AdminTop:     AdminTopMap[model.ID],
 		})
 	}
 	res.SuccessWithList(list, count, c)

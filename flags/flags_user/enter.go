@@ -18,7 +18,7 @@ type FlagUser struct {
 
 func (FlagUser) Create() {
 	var role enum.RoleType
-	fmt.Println("选择角色  1.管理员  2.普通角色  3.游客")
+	fmt.Println("选择角色  1.普通角色  2.管理员  3.游客")
 	_, err := fmt.Scan(&role)
 	if err != nil {
 		logrus.Errorf("输入错误 %s", err)
