@@ -4,6 +4,10 @@ import (
 	"blogx_server/models/ctype"
 	"blogx_server/models/enum"
 	_ "embed"
+	"fmt"
+
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type ArticleModel struct {
@@ -33,4 +37,34 @@ func (ArticleModel) Mapping() string {
 
 func (ArticleModel) Index() string {
 	return "article_index"
+}
+
+func (a *ArticleModel) BeforeDelete(tx *gorm.DB) (err error) {
+	// 使用传入的事务对象 tx，确保所有操作在同一事务中
+	tables := []struct {
+		name  string
+		count int64
+	}{
+		{"comment_models", 0},
+		{"article_digg_models", 0},
+		{"user_article_collect_models", 0},
+		{"user_top_article_models", 0},
+		{"user_article_look_history_models", 0},
+	}
+
+	for i := range tables {
+		// 先查询数量用于日志
+		if err = tx.Table(tables[i].name).Where("article_id = ?", a.ID).Count(&tables[i].count).Error; err != nil {
+			return fmt.Errorf("查询 %s 数量失败：%w", tables[i].name, err)
+		}
+
+		// 直接删除，避免先 Find 再 Delete 的 N+1 问题
+		if err = tx.Table(tables[i].name).Where("article_id = ?", a.ID).Delete(nil).Error; err != nil {
+			return fmt.Errorf("删除 %s 失败：%w", tables[i].name, err)
+		}
+	}
+
+	logrus.Infof("删除文章 ID=%d 的关联数据：\n评论 %d 条，\n点赞 %d 条，\n收藏 %d 条，\n置顶 %d 条，\n浏览 %d 条\n",
+		a.ID, tables[0].count, tables[1].count, tables[2].count, tables[3].count, tables[4].count)
+	return nil
 }

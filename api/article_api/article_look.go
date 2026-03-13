@@ -8,8 +8,9 @@ import (
 	"blogx_server/models"
 	"blogx_server/models/enum"
 	"blogx_server/service/redis_service/redis_article"
-	"github.com/sirupsen/logrus"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,7 +46,7 @@ func (ArticleApi) ArticleLookView(c *gin.Context) {
 
 	// 查这个文章今天有没有在足迹里面
 	var history models.UserArticleLookHistoryModel
-	err = global.Db.Take(&history, "article_id = ? and user_id = ? and created_at > ? and created_at <",
+	err = global.Db.Take(&history, "article_id = ? and user_id = ? and created_at > ? and created_at < ?",
 		cr.ArticleID,
 		claims.Claims.UserID,
 		time.Now().Format("2006-01-02 15:04:05")+" 00:00:00",
