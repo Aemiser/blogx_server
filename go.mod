@@ -73,6 +73,7 @@ require (
 	github.com/pingcap/tipb v0.0.0-20190428032612-535e1abaa330 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.54.0 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

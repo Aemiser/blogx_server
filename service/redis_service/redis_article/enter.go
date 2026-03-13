@@ -5,8 +5,9 @@ import (
 	"blogx_server/utils/date"
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"strconv"
+
+	"github.com/sirupsen/logrus"
 )
 
 type articleCacheType string
@@ -37,6 +38,9 @@ func SetCacheLook(articleID uint, increase bool) {
 	set(articleCacheLook, articleID, increase)
 }
 
+func Clean() {
+	global.Redis.Del(context.Background(), string(articleCacheDigg), string(articleCacheCollect), string(articleCacheLook))
+}
 func get(t articleCacheType, articleID uint) int {
 	num, _ := global.Redis.HGet(context.Background(), string(t), strconv.Itoa(int(articleID))).Int()
 	return num
