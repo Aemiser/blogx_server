@@ -8,6 +8,7 @@ import (
 	"blogx_server/models"
 	"blogx_server/models/enum"
 	"blogx_server/service/redis_service/redis_article"
+	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,12 @@ func (ArticleApi) ArticleLookView(c *gin.Context) {
 		return
 	}
 
-	// TODO：加入缓存，将该文章的id和用户id存入redis中
+	if redis_article.GetUserArticleHistoryCache(article.ID, claims.Claims.UserID) {
+		logrus.Infof("在缓存中")
+		res.SuccessWithMsg("成功", c)
+		return
+	}
+
 	// 查这个文章今天有没有在足迹里面
 	var history models.UserArticleLookHistoryModel
 	err = global.Db.Take(&history, "article_id = ? and user_id = ? and created_at > ? and created_at <",
@@ -59,6 +65,7 @@ func (ArticleApi) ArticleLookView(c *gin.Context) {
 	}
 
 	redis_article.SetCacheLook(article.ID, true)
+	redis_article.SetUserArticleHistoryCache(article.ID, claims.Claims.UserID)
 	res.SuccessWithMsg("成功", c)
 	return
 }
