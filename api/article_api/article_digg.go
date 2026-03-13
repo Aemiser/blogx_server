@@ -6,6 +6,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/service/redis_service/redis_article"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -37,6 +38,8 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 			return
 		}
 		res.SuccessWithMsg("点赞成功", c)
+		redis_article.SetCacheDigg(article.ID, true)
+
 		return
 	}
 
@@ -50,6 +53,7 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 			res.FailWithMsg("取消点赞失败", c)
 			return
 		}
+		redis_article.SetCacheDigg(article.ID, false)
 		res.SuccessWithMsg("取消点赞成功", c)
 	} else {
 		// 已删除状态（DeletedAt 有值），恢复点赞
@@ -60,5 +64,7 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 			return
 		}
 		res.SuccessWithMsg("点赞成功", c)
+		redis_article.SetCacheDigg(article.ID, true)
 	}
+	return
 }

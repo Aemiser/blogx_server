@@ -7,6 +7,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/redis_service/redis_article"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -74,6 +75,7 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 		}
 		res.FailWithMsg("文章已收藏", c)
 		// TODO:加如缓存功能
+		redis_article.SetCacheCollect(article.ID, true)
 		global.Db.Model(&collectmodel).Update("article_count", gorm.Expr("article_count + 1"))
 		return
 	}
@@ -87,6 +89,8 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 			return
 		}
 		res.FailWithMsg("取消收藏成功", c)
+		redis_article.SetCacheCollect(article.ID, false)
+
 		global.Db.Model(&collectmodel).Update("article_count", gorm.Expr("article_count - 1"))
 		return
 	}
@@ -99,7 +103,7 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 	}
 	res.FailWithMsg("文章收藏成功", c)
 	// TODO:加如缓存功能
-
+	redis_article.SetCacheCollect(article.ID, true)
 	global.Db.Model(&collectmodel).Update("article_count", gorm.Expr("article_count + 1"))
 	return
 }

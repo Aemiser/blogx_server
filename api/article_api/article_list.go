@@ -8,6 +8,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/redis_service/redis_article"
 	"blogx_server/utils/sql"
 	"fmt"
 
@@ -122,8 +123,15 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 
 	// 响应数据封装
 	var list = make([]ArticleListResponse, 0)
+	collectMap := redis_article.GetAllCacheCollect()
+	LookMap := redis_article.GetAllCacheLook()
+	DiggMap := redis_article.GetAllCacheDigg()
+
 	for _, model := range _list {
 		model.Content = ""
+		model.DiggCount = model.DiggCount + DiggMap[model.ID]
+		model.CollectCount = model.CollectCount + collectMap[model.ID]
+		model.LookCount = model.LookCount + LookMap[model.ID]
 		list = append(list, ArticleListResponse{
 			ArticleModel: model,
 			UserTop:      userTopMap[model.ID],

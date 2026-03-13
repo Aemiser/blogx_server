@@ -7,6 +7,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/redis_service/redis_article"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -56,6 +57,8 @@ func (ArticleApi) ArticleLookView(c *gin.Context) {
 		res.FailWithMsg("失败", c)
 		return
 	}
+
+	redis_article.SetCacheLook(article.ID, true)
 	res.SuccessWithMsg("成功", c)
 	return
 }
