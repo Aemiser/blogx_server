@@ -26,4 +26,6 @@ func ArticleRouter(r *gin.RouterGroup) {
 	r.POST("article/history", middlerware.BindJsonMiddlerware[article_api.ArticleLookRequest], app.ArticleLookView)
 	r.GET("article/history", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[article_api.ArticleLookListRequest], app.ArticleLookListView)
 	r.DELETE("article/history", middlerware.AuthMiddleware, middlerware.BindJsonMiddlerware[models.IDListRequest], app.ArticleLookDeleteView)
+
+	r.POST("article/category", middlerware.AuthMiddleware, middlerware.BindJsonMiddlerware[article_api.CategoryCreate], app.CategoryCreateView)
 }
