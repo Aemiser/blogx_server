@@ -120,3 +120,26 @@ func (ArticleApi) ArticleLookListView(c *gin.Context) {
 	}
 	res.SuccessWithList(list, count, c)
 }
+
+func (ArticleApi) ArticleLookDeleteView(c *gin.Context) {
+	cr := middlerware.GetBind[models.IDListRequest](c)
+	claims := jwts.GetClaimsByGin(c)
+
+	var list []models.UserArticleLookHistoryModel
+	err := global.Db.Debug().Find(&list, "user_id = ? and id in ?", claims.Claims.UserID, cr.IDList).Error
+	if err != nil {
+		logrus.Errorf("足迹删除失败: %s", err)
+		res.FailWithMsg("足迹删除失败", c)
+		return
+	}
+	if len(list) > 0 {
+		err := global.Db.Delete(&list).Error
+		if err != nil {
+			res.FailWithMsg("足迹删除失败", c)
+			return
+		}
+	}
+
+	res.FailWithMsgf(c, "成功删除 %d 条足迹", len(list))
+	return
+}
