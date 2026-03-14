@@ -1,11 +1,13 @@
 package article_api
 
 import (
+	"blogx_server/common"
 	"blogx_server/common/jwts"
 	"blogx_server/common/res"
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/models/enum"
 
 	"github.com/gin-gonic/gin"
 )
@@ -55,4 +57,82 @@ func (ArticleApi) CategoryCreateView(c *gin.Context) {
 		return
 	}
 	res.SuccessWithMsg("更新分类成功", c)
+}
+
+type CategoryListRequest struct {
+	common.PageInfo
+	UserID uint `form:"UserID"`
+	Type   int8 `form:"type" binding:"required,oneof=1 2 3 "` // 1查自己 2查别人 3后台
+}
+type CategoryListResponse struct {
+	models.CategoryModel
+	ArticleCount int `json:"ArticleCount"`
+}
+
+func (ArticleApi) CategoryListView(c *gin.Context) {
+	cr := middlerware.GetBind[CategoryListRequest](c)
+
+	switch cr.Type {
+	case 1:
+		claims, err := jwts.ParseTokenByGin(c)
+		if err != nil {
+			res.FailWithError(err, c)
+			return
+		}
+		cr.UserID = claims.Claims.UserID
+	case 2:
+
+	case 3:
+		claims, err := jwts.ParseTokenByGin(c)
+		if err != nil {
+			res.FailWithError(err, c)
+			return
+		}
+
+		if claims.Claims.Role != enum.AdminRole {
+			res.FailWithMsg("无权限", c)
+			return
+		}
+	}
+
+	_list, count, _ := common.ListQuery(models.CategoryModel{
+		UserID: cr.UserID,
+	}, common.Options{
+		PageInfo: cr.PageInfo,
+		Preloads: []string{"ArticleList"},
+		Likes:    []string{"title"}})
+
+	var list = make([]CategoryListResponse, 0)
+	for _, i2 := range _list {
+		list = append(list, CategoryListResponse{
+			CategoryModel: i2,
+			ArticleCount:  len(i2.ArticleList),
+		})
+	}
+	res.SuccessWithList(list, count, c)
+
+}
+func (ArticleApi) CategoryRemoveView(c *gin.Context) {
+	var cr = middlerware.GetBind[models.IDListRequest](c)
+
+	var list []models.CategoryModel
+
+	query := global.Db.Where("id in ?", cr.IDList)
+	claims := jwts.GetClaimsByGin(c)
+	if claims.Claims.Role != enum.AdminRole {
+		query.Where("user_id = ?", claims.Claims.UserID)
+	}
+
+	global.Db.Where(query).Find(&list)
+
+	if len(list) > 0 {
+		err := global.Db.Delete(&list).Error
+		if err != nil {
+			res.FailWithMsg("删除分类错误", c)
+			return
+		}
+	}
+
+	res.SuccessWithMsgf(c, "删除成功，成功删除分类 %d 条", len(list))
+
 }
