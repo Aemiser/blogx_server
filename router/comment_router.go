@@ -11,6 +11,8 @@ import (
 
 func CommentRouter(r *gin.RouterGroup) {
 	app := api.App.CommentApi
-	r.POST("comment", middlerware.AuthMiddleware, middlerware.BindJsonMiddlerware[comment_api.CommentCreateReaquest], app.CommentListView)
+	r.POST("comment", middlerware.AuthMiddleware, middlerware.BindJsonMiddlerware[comment_api.CommentCreateReaquest], app.CommentCreateView)
 	r.GET("comment/tree/:id", middlerware.AuthMiddleware, middlerware.BindUriMiddlerware[models.IDRequest], app.CommentTreeView)
+	r.GET("comment", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[comment_api.CommentListRequest], app.CommentListView)
+
 }

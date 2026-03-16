@@ -17,7 +17,7 @@ type CommentCreateReaquest struct {
 	ParentID  *uint  `json:"parentID"`
 }
 
-func (CommentApi) CommentListView(c *gin.Context) {
+func (CommentApi) CommentCreateView(c *gin.Context) {
 	cr := middlerware.GetBind[CommentCreateReaquest](c)
 
 	var article models.ArticleModel
