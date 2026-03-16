@@ -7,6 +7,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/comment_service"
 	"blogx_server/service/redis_service/redis_article"
 
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,15 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 	// 找根评论
 	if cr.ParentID != nil {
 		// 找父评论
+		parentList := comment_service.GetParents(*cr.ParentID)
+		// 判断父评论的层级是否满足
+		if len(parentList) >= global.Config.Site.Article.Commentline {
+			res.FailWithMsg("评论层级达到限制", c)
+			return
+		}
+		if len(parentList) > 0 {
+			model.RootParentID = &parentList[len(parentList)-1].ID
+		}
 	}
 
 	err = global.Db.Create(&model).Error

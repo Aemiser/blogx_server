@@ -22,6 +22,21 @@ func GetRootComment(commentID uint) (model *models.CommentModel) {
 	return GetRootComment(*comment.ParentID)
 }
 
+// GetParents 获取一个根评论的所有父评论
+func GetParents(commentID uint) (list []models.CommentModel) {
+	var comment models.CommentModel
+	err := global.Db.Take(&comment, commentID).Error
+	if err != nil {
+		return nil
+	}
+	list = append(list, comment)
+	if comment.ParentID != nil {
+		// 还有父评论了 添加到列表中
+		list = append(list, GetParents(*comment.ParentID)...)
+	}
+	return
+}
+
 // GetCommentTree 获取评论树
 func GetCommentTree(model *models.CommentModel) {
 	global.Db.Preload("SubCommentList").Take(model)

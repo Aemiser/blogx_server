@@ -5,7 +5,6 @@ import (
 	"blogx_server/flags"
 	"blogx_server/global"
 	"blogx_server/models"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -41,10 +40,15 @@ func main() {
 	//for _, item := range list {
 	//	fmt.Println(item.ID)
 	//}
+	//
+	//res := GetCommentTreeV4(1)
+	//byteData, _ := json.Marshal(res)
+	//fmt.Println(string(byteData))
 
-	res := GetCommentTreeV4(1)
-	byteData, _ := json.Marshal(res)
-	fmt.Println(string(byteData))
+	list := GetParents(9)
+	for _, item := range list {
+		fmt.Println(item.ID)
+	}
 }
 
 func GetCommentTree(model *models.CommentModel) {
@@ -117,6 +121,21 @@ func GetCommentTreeV4(id uint) (res *CommentResponse) {
 	}
 	for _, commentModel := range model.SubCommentList {
 		res.SubComments = append(res.SubComments, GetCommentTreeV4(commentModel.ID))
+	}
+	return
+}
+
+// GetParents 获取一个根评论的所有父评论
+func GetParents(commentID uint) (list []models.CommentModel) {
+	var comment models.CommentModel
+	err := global.Db.Take(&comment, commentID).Error
+	if err != nil {
+		return nil
+	}
+	list = append(list, comment)
+	if comment.ParentID != nil {
+		// 还有父评论了 添加到列表中
+		list = append(list, GetParents(*comment.ParentID)...)
 	}
 	return
 }
