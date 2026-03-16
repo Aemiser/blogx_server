@@ -20,19 +20,24 @@ func main() {
 	//	Model: models.Model{gorm.Model{ID: 1}},
 	//}
 	//GetCommentTree(&model)
-	model := GetCommentTreeV3(1)
-	for _, c1 := range model.SubCommentList {
-		fmt.Println("  ", c1.ID)
-		for _, c2 := range c1.SubCommentList {
-			fmt.Println("    ", c2.ID)
-			for _, c3 := range c2.SubCommentList {
-				fmt.Println("      ", c3.ID)
-				for _, c4 := range c3.SubCommentList {
-					fmt.Println("        ", c4.ID)
-				}
-			}
+	//model := GetCommentTreeV3(1)
+	//for _, c1 := range model.SubCommentList {
+	//	fmt.Println("  ", c1.ID)
+	//	for _, c2 := range c1.SubCommentList {
+	//		fmt.Println("    ", c2.ID)
+	//		for _, c3 := range c2.SubCommentList {
+	//			fmt.Println("      ", c3.ID)
+	//			for _, c4 := range c3.SubCommentList {
+	//				fmt.Println("        ", c4.ID)
+	//			}
+	//		}
+	//
+	//	}
+	//}
 
-		}
+	list := GetCommentOneDimensionalization(1)
+	for _, item := range list {
+		fmt.Println(item.ID)
 	}
 }
 
@@ -53,6 +58,19 @@ func GetCommentTreeV3(id uint) (model *models.CommentModel) {
 		commentModel := model.SubCommentList[i]
 		item := GetCommentTreeV3(commentModel.ID)
 		model.SubCommentList[i] = item
+	}
+	return
+}
+func GetCommentOneDimensionalization(id uint) (list []models.CommentModel) {
+	model := models.CommentModel{
+		Model: models.Model{gorm.Model{ID: id}},
+	}
+
+	global.Db.Preload("SubCommentList").Take(&model)
+	list = append(list, model)
+	for _, item := range model.SubCommentList {
+		subList := GetCommentOneDimensionalization(item.ID)
+		list = append(list, subList...)
 	}
 	return
 }

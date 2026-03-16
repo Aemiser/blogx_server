@@ -43,3 +43,17 @@ func GetCommentTreeV2(id uint) (model *models.CommentModel) {
 	}
 	return
 }
+
+func GetCommentOneDimensionalization(id uint) (list []models.CommentModel) {
+	model := models.CommentModel{
+		Model: models.Model{gorm.Model{ID: id}},
+	}
+
+	global.Db.Preload("SubCommentList").Take(&model)
+	list = append(list, model)
+	for _, item := range model.SubCommentList {
+		subList := GetCommentOneDimensionalization(item.ID)
+		list = append(list, subList...)
+	}
+	return
+}
