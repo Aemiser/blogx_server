@@ -1,0 +1,122 @@
+server:
+    ip:
+    port:
+jwt:
+    secret: xxx
+    expire: 3
+    issuer: xxxx
+log:
+    level: debug
+    app: blogx_server
+    dir: logs
+redis:
+    host:
+    port:
+    password:
+    db:
+db:
+    - host:
+      port:
+      user:
+      password:
+      dbname:
+      debug:
+      maxIdleConns:
+      maxOpenConns:
+    - host:
+      port:
+      user:
+      password:
+      dbname:
+      debug:
+      maxIdleConns:
+      maxOpenConns:
+site:
+    siteInfo:
+        title:
+        logo: ""
+        beian: ""
+        mode: 1
+    project:
+        title: ""
+        icon: ""
+        webPath: ""
+    seo:
+        keywords: ""
+        description: ""
+    about:
+        siteDate: ""
+        qq: ""
+        wechat: ""
+        gitee: ""
+        github: ""
+        bilibili: ""
+    login:
+        qqLogin: false
+        usernamePwdLogin: true
+        emailLogin: false
+        captcha: false
+    indexRight:
+        list: []
+    article:
+        noExamine: true
+email:
+    domain:
+    port:
+    sendEmail:
+    AuthCode:
+    sendNickname:
+    SSL: false
+    TLS: false
+qq:
+    appID: ""
+    appKey: ""
+    redirect: ""
+qiniu:
+    enable: true
+    accessKey:
+    secretKey:
+    bucket:
+    uri:
+    region:
+    prefix:
+    size:
+    expired:
+ai:
+    enable: false
+    secretKey: ""
+    nickname: ""
+    avatar: ""
+uploads:
+    size: 3
+    type: mb
+    writeList:
+        - png
+        - jpg
+        - gif
+        - jpeg
+        - webp
+    imageDir: images
+es:
+    addr:
+    username: ""
+    password: ""
+    is_https: false
+river:
+    server_id: 1001
+    flavor: mysql
+    data_dir: ./var
+    source:
+        - schema: blogx
+          tables:
+            - article_models
+    rule:
+        - schema: blogx
+          table: article_models
+          index: article_index
+          type: _doc
+          field:
+            tag_list: tag_list,list
+    bulk_size: 128
+    enable: true
+    debug: false
