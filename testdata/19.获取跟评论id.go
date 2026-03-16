@@ -5,7 +5,9 @@ import (
 	"blogx_server/flags"
 	"blogx_server/global"
 	"blogx_server/models"
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -35,10 +37,14 @@ func main() {
 	//	}
 	//}
 
-	list := GetCommentOneDimensionalization(1)
-	for _, item := range list {
-		fmt.Println(item.ID)
-	}
+	//list := GetCommentOneDimensionalization(1)
+	//for _, item := range list {
+	//	fmt.Println(item.ID)
+	//}
+
+	res := GetCommentTreeV4(1)
+	byteData, _ := json.Marshal(res)
+	fmt.Println(string(byteData))
 }
 
 func GetCommentTree(model *models.CommentModel) {
@@ -71,6 +77,46 @@ func GetCommentOneDimensionalization(id uint) (list []models.CommentModel) {
 	for _, item := range model.SubCommentList {
 		subList := GetCommentOneDimensionalization(item.ID)
 		list = append(list, subList...)
+	}
+	return
+}
+
+type CommentResponse struct {
+	models.CommentModel
+	ID           uint               `json:"id"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	Content      string             `json:"content"`
+	UserID       uint               `json:"userID"`
+	UserNickname string             `json:"nickName"`
+	UserAvatar   string             `json:"userAvatar"`
+	ArticleID    uint               `json:"articleID"`
+	ParentID     *uint              `json:"parentID"`
+	DiggCount    int                `json:"diggCount"`
+	ApplyCount   int                `json:"applyCount"`
+	SubComments  []*CommentResponse `json:"subComments"`
+}
+
+func GetCommentTreeV4(id uint) (res *CommentResponse) {
+	model := models.CommentModel{
+		Model: models.Model{gorm.Model{ID: id}},
+	}
+
+	global.Db.Preload("UserModel").Preload("SubCommentList").Take(&model)
+
+	res = &CommentResponse{
+		ID:           model.ID,
+		CreatedAt:    model.CreatedAt,
+		Content:      model.Content,
+		UserID:       model.UserID,
+		UserNickname: model.UserModel.Nickname,
+		UserAvatar:   model.UserModel.Avatar,
+		ArticleID:    model.ArticleID,
+		ParentID:     model.ParentID,
+		DiggCount:    model.DiggCount,
+		ApplyCount:   0,
+	}
+	for _, commentModel := range model.SubCommentList {
+		res.SubComments = append(res.SubComments, GetCommentTreeV4(commentModel.ID))
 	}
 	return
 }
