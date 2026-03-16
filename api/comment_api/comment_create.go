@@ -7,6 +7,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/redis_service/redis_article"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,6 +47,7 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 		return
 	}
 
+	redis_article.SetCacheComment(cr.ArticleID, 1)
 	res.SuccessWithMsg("评论成功", c)
 	return
 }

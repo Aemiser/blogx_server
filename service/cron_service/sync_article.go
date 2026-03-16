@@ -13,6 +13,7 @@ func SyncArticle() {
 	collectMap := redis_article.GetAllCacheCollect()
 	diggMap := redis_article.GetAllCacheDigg()
 	lookMap := redis_article.GetAllCacheLook()
+	commentMap := redis_article.GetAllCacheComment()
 
 	var list = []models.ArticleModel{}
 	global.Db.Find(&list)
@@ -21,14 +22,16 @@ func SyncArticle() {
 		collect := collectMap[models.ID]
 		digg := diggMap[models.ID]
 		look := lookMap[models.ID]
+		comment := commentMap[models.ID]
 		if collect == 0 || digg == 0 || look == 0 {
 			continue
 		}
 
 		err := global.Db.Model(&models).Updates(map[string]any{
-			"collect": gorm.Expr("collect + ?", collect),
-			"digg":    gorm.Expr("digg + ?", digg),
-			"look":    gorm.Expr("look + ?", look),
+			"collect_count": gorm.Expr("collect_count + ?", collect),
+			"digg_count":    gorm.Expr("digg_count + ?", digg),
+			"look_count":    gorm.Expr("look_count + ?", look),
+			"comment_count": gorm.Expr("lcomment_count + ?", comment),
 		}).Error
 		if err != nil {
 			logrus.Error(err)

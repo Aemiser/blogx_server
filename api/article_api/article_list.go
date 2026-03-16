@@ -128,14 +128,16 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 	// 响应数据封装
 	var list = make([]ArticleListResponse, 0)
 	collectMap := redis_article.GetAllCacheCollect()
-	LookMap := redis_article.GetAllCacheLook()
-	DiggMap := redis_article.GetAllCacheDigg()
+	lookMap := redis_article.GetAllCacheLook()
+	diggMap := redis_article.GetAllCacheDigg()
+	commentMap := redis_article.GetAllCacheComment()
 
 	for _, model := range _list {
 		model.Content = ""
-		model.DiggCount = model.DiggCount + DiggMap[model.ID]
+		model.DiggCount = model.DiggCount + diggMap[model.ID]
 		model.CollectCount = model.CollectCount + collectMap[model.ID]
-		model.LookCount = model.LookCount + LookMap[model.ID]
+		model.LookCount = model.LookCount + lookMap[model.ID]
+		model.CommentCount = model.LookCount + commentMap[model.ID]
 		date := ArticleListResponse{
 			ArticleModel: model,
 			UserTop:      userTopMap[model.ID],
