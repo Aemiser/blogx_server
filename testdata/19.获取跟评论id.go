@@ -4,8 +4,10 @@ import (
 	"blogx_server/core"
 	"blogx_server/flags"
 	"blogx_server/global"
-	"blogx_server/service/comment_service"
+	"blogx_server/models"
 	"fmt"
+
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -14,11 +16,43 @@ func main() {
 	core.InitLogrus()
 	global.Db = core.InitDB()
 
-	rootComment := comment_service.GetRootComment(1)
-	fmt.Println(rootComment.ID)
-	rootComment = comment_service.GetRootComment(2)
-	fmt.Println(rootComment.ID)
-	rootComment = comment_service.GetRootComment(3)
-	fmt.Println(rootComment.ID)
+	//model := models.CommentModel{
+	//	Model: models.Model{gorm.Model{ID: 1}},
+	//}
+	//GetCommentTree(&model)
+	model := GetCommentTreeV3(1)
+	for _, c1 := range model.SubCommentList {
+		fmt.Println("  ", c1.ID)
+		for _, c2 := range c1.SubCommentList {
+			fmt.Println("    ", c2.ID)
+			for _, c3 := range c2.SubCommentList {
+				fmt.Println("      ", c3.ID)
+				for _, c4 := range c3.SubCommentList {
+					fmt.Println("        ", c4.ID)
+				}
+			}
 
+		}
+	}
+}
+
+func GetCommentTree(model *models.CommentModel) {
+	global.Db.Preload("SubCommentList").Take(model)
+	for _, commentModel := range model.SubCommentList {
+		GetCommentTree(commentModel)
+	}
+}
+
+func GetCommentTreeV3(id uint) (model *models.CommentModel) {
+	model = &models.CommentModel{
+		Model: models.Model{gorm.Model{ID: id}},
+	}
+
+	global.Db.Preload("SubCommentList").Take(model)
+	for i := 0; i < len(model.SubCommentList); i++ {
+		commentModel := model.SubCommentList[i]
+		item := GetCommentTreeV3(commentModel.ID)
+		model.SubCommentList[i] = item
+	}
+	return
 }

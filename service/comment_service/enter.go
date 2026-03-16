@@ -3,6 +3,8 @@ package comment_service
 import (
 	"blogx_server/global"
 	"blogx_server/models"
+
+	"gorm.io/gorm"
 )
 
 func GetRootComment(commentID uint) (model *models.CommentModel) {
@@ -17,4 +19,27 @@ func GetRootComment(commentID uint) (model *models.CommentModel) {
 		return &comment
 	}
 	return GetRootComment(*comment.ParentID)
+}
+
+// GetCommentTree 获取评论树
+func GetCommentTree(model *models.CommentModel) {
+	global.Db.Preload("SubCommentList").Take(model)
+	for _, commentModel := range model.SubCommentList {
+		GetCommentTree(commentModel)
+	}
+}
+
+// GetCommentTreeV2 获取评论树
+func GetCommentTreeV2(id uint) (model *models.CommentModel) {
+	model = &models.CommentModel{
+		Model: models.Model{gorm.Model{ID: id}},
+	}
+
+	global.Db.Preload("SubCommentList").Take(model)
+	for i := 0; i < len(model.SubCommentList); i++ {
+		commentModel := model.SubCommentList[i]
+		item := GetCommentTreeV2(commentModel.ID)
+		model.SubCommentList[i] = item
+	}
+	return
 }
