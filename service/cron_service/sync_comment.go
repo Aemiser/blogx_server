@@ -11,18 +11,21 @@ import (
 
 func SyncComment() {
 	commentMap := redis_comment.GetAllCacheApply()
+	diggMap := redis_comment.GetAllCacheDigg()
 
 	var list = []models.CommentModel{}
 	global.Db.Find(&list)
 
 	for _, models := range list {
 		apply := commentMap[models.ID]
-		if apply == 0 {
+		digg := diggMap[models.ID]
+		if apply == 0 || digg == 0 {
 			continue
 		}
 
 		err := global.Db.Model(&models).Updates(map[string]any{
 			"apply_count": gorm.Expr("apply_count + ?", apply),
+			"digg_count":  gorm.Expr("digg_count + ?", digg),
 		}).Error
 		if err != nil {
 			logrus.Error(err)

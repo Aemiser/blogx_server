@@ -8,6 +8,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/redis_service/redis_comment"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -71,7 +72,7 @@ func (CommentApi) CommentListView(c *gin.Context) {
 			ArticleID:    model.ArticleID,
 			ArticleTitle: model.ArticleModel.Title,
 			ArticleCover: model.ArticleModel.Cover,
-			DiggCount:    model.DiggCount,
+			DiggCount:    model.DiggCount + redis_comment.GetCacheDigg(model.ID),
 		})
 	}
 

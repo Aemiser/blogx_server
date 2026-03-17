@@ -111,7 +111,7 @@ func getCommentTreeV4(id uint, line int) (res *CommentResponse) {
 		UserAvatar:   model.UserModel.Avatar,
 		ArticleID:    model.ArticleID,
 		ParentID:     model.ParentID,
-		DiggCount:    model.DiggCount,
+		DiggCount:    model.DiggCount + redis_comment.GetCacheDigg(model.ID),
 		ApplyCount:   redis_comment.GetCacheApply(model.ID),
 		SubComments:  make([]*CommentResponse, 0),
 	}

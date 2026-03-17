@@ -10,6 +10,7 @@ type commentCacheType string
 
 const (
 	commentCacheApply commentCacheType = "comment_apply_key"
+	commentCacheDigg  commentCacheType = "comment_digg_key"
 )
 
 func set(t commentCacheType, commentID uint, n int) {
@@ -17,8 +18,11 @@ func set(t commentCacheType, commentID uint, n int) {
 	num += n
 	global.Redis.HSet(context.Background(), string(t), strconv.Itoa(int(commentID)), num)
 }
-func SetCacheApply(articleID uint, n int) {
-	set(commentCacheApply, articleID, n)
+func SetCacheApply(commentID uint, n int) {
+	set(commentCacheApply, commentID, n)
+}
+func SetCacheDigg(commentID uint, n int) {
+	set(commentCacheDigg, commentID, n)
 }
 
 func Clean() {
@@ -31,8 +35,11 @@ func get(t commentCacheType, articleID uint) int {
 func GetCacheApply(commentID uint) int {
 	return get(commentCacheApply, commentID)
 }
+func GetCacheDigg(commentID uint) int {
+	return get(commentCacheDigg, commentID)
+}
 
-func GetAll(comment commentCacheType) (mps map[uint]int) {
+func getAll(comment commentCacheType) (mps map[uint]int) {
 	res, err := global.Redis.HGetAll(context.Background(), string(comment)).Result()
 	if err != nil {
 		return
@@ -53,5 +60,8 @@ func GetAll(comment commentCacheType) (mps map[uint]int) {
 	return mps
 }
 func GetAllCacheApply() (mps map[uint]int) {
-	return GetAll(commentCacheApply)
+	return getAll(commentCacheApply)
+}
+func GetAllCacheDigg() (mps map[uint]int) {
+	return getAll(commentCacheDigg)
 }
