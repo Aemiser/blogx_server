@@ -3,6 +3,7 @@ package comment_service
 import (
 	"blogx_server/global"
 	"blogx_server/models"
+	"blogx_server/service/redis_service/redis_comment"
 	"time"
 
 	"gorm.io/gorm"
@@ -37,6 +38,21 @@ func GetParents(commentID uint) (list []models.CommentModel) {
 	return
 }
 
+// GetCommentOneDimensionalization 获取该评论id下的所有子评论id
+func GetCommentOneDimensionalization(id uint) (list []models.CommentModel) {
+	model := models.CommentModel{
+		Model: models.Model{gorm.Model{ID: id}},
+	}
+
+	global.Db.Preload("SubCommentList").Take(&model)
+	list = append(list, model)
+	for _, item := range model.SubCommentList {
+		subList := GetCommentOneDimensionalization(item.ID)
+		list = append(list, subList...)
+	}
+	return
+}
+
 // GetCommentTree 获取评论树
 func GetCommentTree(model *models.CommentModel) {
 	global.Db.Preload("SubCommentList").Take(model)
@@ -60,20 +76,6 @@ func GetCommentTreeV2(id uint) (model *models.CommentModel) {
 	return
 }
 
-func GetCommentOneDimensionalization(id uint) (list []models.CommentModel) {
-	model := models.CommentModel{
-		Model: models.Model{gorm.Model{ID: id}},
-	}
-
-	global.Db.Preload("SubCommentList").Take(&model)
-	list = append(list, model)
-	for _, item := range model.SubCommentList {
-		subList := GetCommentOneDimensionalization(item.ID)
-		list = append(list, subList...)
-	}
-	return
-}
-
 type CommentResponse struct {
 	models.CommentModel
 	ID           uint               `json:"id"`
@@ -90,6 +92,10 @@ type CommentResponse struct {
 }
 
 func GetCommentTreeV4(id uint) (res *CommentResponse) {
+	return getCommentTreeV4(id, 1)
+}
+
+func getCommentTreeV4(id uint, line int) (res *CommentResponse) {
 	model := models.CommentModel{
 		Model: models.Model{gorm.Model{ID: id}},
 	}
@@ -106,10 +112,14 @@ func GetCommentTreeV4(id uint) (res *CommentResponse) {
 		ArticleID:    model.ArticleID,
 		ParentID:     model.ParentID,
 		DiggCount:    model.DiggCount,
-		ApplyCount:   0,
+		ApplyCount:   redis_comment.GetCacheApply(model.ID),
+		SubComments:  make([]*CommentResponse, 0),
+	}
+	if line >= global.Config.Site.Article.Commentline {
+		return
 	}
 	for _, commentModel := range model.SubCommentList {
-		res.SubComments = append(res.SubComments, GetCommentTreeV4(commentModel.ID))
+		res.SubComments = append(res.SubComments, getCommentTreeV4(commentModel.ID, line+1))
 	}
 	return
 }
