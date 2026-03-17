@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"blogx_server/service/redis_service/redis_article"
+
+	"gorm.io/gorm"
+)
 
 type UserArticleCollectModel struct {
 	Model
@@ -10,5 +14,8 @@ type UserArticleCollectModel struct {
 	ArticleModel ArticleModel `gorm:"foreignKey:ArticleID" json:"-"`
 	CollectID    uint         `gorm:"uniqueIndex:idx_name" json:"collectID"` // 收藏夹ID
 	CollectModel CollectModel `gorm:"foreignKey:CollectID" json:"-"`         // 属于哪个收藏夹
-	CreatedAt    time.Time    `json:"createdAt"`
+}
+
+func (u *UserArticleCollectModel) BeforeDelete(tx *gorm.DB) {
+	redis_article.SetCacheCollect(u.ArticleID, false)
 }

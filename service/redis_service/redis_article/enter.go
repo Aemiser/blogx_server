@@ -79,11 +79,15 @@ func GetAll(artile articleCacheType) (mps map[uint]int) {
 	for key, numS := range res {
 		iK, err := strconv.Atoi(key)
 		if err != nil {
+			// 跳过无效的 key（可能是脏数据）
+			logrus.Warnf("跳过无效的 article key: %s, value: %s", key, numS)
 			continue
 		}
 
 		iN, err := strconv.Atoi(numS)
 		if err != nil {
+			// 跳过无效的值
+			logrus.Warnf("跳过无效的 article value: key: %d, value: %s", iK, numS)
 			continue
 		}
 		mps[uint(iK)] = iN
