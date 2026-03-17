@@ -21,6 +21,7 @@ type ArticleListRequest struct {
 	UserID     uint  `form:"userID"`
 	CategoryID *uint `form:"categoryID"`
 	Status     enum.ArticleStatus
+	CollectID  uint `form:"collectID"`
 }
 
 type ArticleListResponse struct {
@@ -62,6 +63,21 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		}
 		cr.Status = 0
 		cr.Order = ""
+
+		if cr.CollectID != 0 {
+			// 如果传入了收藏夹ID，查权限
+			var userconf models.UserConfigModel
+			err := global.Db.Take(&userconf, "user_id = ?", cr.UserID).Error
+			if err != nil {
+				res.FailWithMsg("用户不存在", c)
+				return
+			}
+
+			if !userconf.OpenCollect {
+				res.FailWithMsg("用户未开放收藏功能", c)
+				return
+			}
+		}
 	case 2:
 		// 查自己
 		claims, err := jwts.ParseTokenByGin(c)

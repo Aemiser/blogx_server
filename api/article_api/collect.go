@@ -92,7 +92,17 @@ func (ArticleApi) CollectListView(c *gin.Context) {
 		}
 		cr.UserID = claims.Claims.UserID
 	case 2:
+		var userconf models.UserConfigModel
+		err := global.Db.Take(&userconf, "user_id = ?", cr.UserID).Error
+		if err != nil {
+			res.FailWithMsg("用户不存在", c)
+			return
+		}
 
+		if !userconf.OpenCollect {
+			res.FailWithMsg("用户未开放收藏功能", c)
+			return
+		}
 	case 3:
 		claims, err := jwts.ParseTokenByGin(c)
 		if err != nil {
