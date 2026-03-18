@@ -4,6 +4,8 @@ import (
 	"blogx_server/models/enum"
 	"math"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type UserModel struct {
@@ -23,10 +25,20 @@ type UserModel struct {
 	Addr            string                  `gorm:"size:32" json:"addr"`
 }
 
-//
-//func (u *UserModel) AfterCreate(tx *gorm.DB) (err error) {
-//	return tx.Create(())
-//}
+func (u *UserModel) AfterCreate(tx *gorm.DB) (err error) {
+	err = tx.Create(&UserConfigModel{UserID: u.ID,
+		OpenCollect: true,
+		OpenFollow:  true,
+		OpenFans:    true,
+		HomeStyleID: 1}).Error
+	err = tx.Create(&UserMessageConfModel{
+		UserID:             u.ID,
+		OpenCommentMessage: true,
+		OpenDiggMessage:    true,
+		OpenPrivateChat:    true,
+	}).Error
+	return
+}
 
 func (u *UserModel) GetCodeAge() uint {
 	sub := time.Now().Sub(u.CreatedAt)
