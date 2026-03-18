@@ -7,6 +7,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/message_service"
 	"blogx_server/service/redis_service/redis_article"
 
 	"github.com/gin-gonic/gin"
@@ -62,20 +63,21 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 		CollectID: cr.CollectID}).Take(&articleCollect).Error
 
 	if err != nil { // 说明查询为空，未收藏，先创建，
-		// 文章收藏
-		err = global.Db.Create(&models.UserArticleCollectModel{
+		model := models.UserArticleCollectModel{
 			ArticleID: cr.ArticleID,
 			UserID:    claims.Claims.UserID,
 			CollectID: cr.CollectID,
-		}).Error
+		}
+		// 文章收藏
+		err = global.Db.Create(&model).Error
 
 		if err != nil {
 			res.FailWithMsg("收藏失败", c)
 			return
 		}
-		res.FailWithMsg("文章已收藏", c)
-		// TODO:加如缓存功能
+		res.FailWithMsg("文章收藏成功", c)
 		redis_article.SetCacheCollect(article.ID, true)
+		message_service.InsertCollectArticleMessage(model)
 		global.Db.Model(&collectmodel).Update("article_count", gorm.Expr("article_count + 1"))
 		return
 	}
@@ -102,9 +104,12 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 		return
 	}
 	res.FailWithMsg("文章收藏成功", c)
-	// TODO:加如缓存功能
+
 	redis_article.SetCacheCollect(article.ID, true)
 	global.Db.Model(&collectmodel).Update("article_count", gorm.Expr("article_count + 1"))
+
+	message_service.InsertCollectArticleMessage(articleCollect)
+
 	return
 }
 

@@ -61,3 +61,20 @@ func InsertDiggArticleMessage(model models.ArticleDiggModel) {
 		logrus.Error(err)
 	}
 }
+
+// InsertCollectArticleMessage 插入一条点赞文章消息
+func InsertCollectArticleMessage(model models.UserArticleCollectModel) {
+	global.Db.Preload("UserModel").Preload("ArticleModel").Take(&model)
+	err := global.Db.Create(&models.MessageModel{
+		Type:               message_type_enum.CollectArticleType,
+		RecvUserID:         model.ArticleModel.UserID,
+		ActionUserID:       model.UserID,
+		ActionUserNickName: model.UserModel.Nickname,
+		ActionUserAvatar:   model.UserModel.Avatar,
+		ArticleID:          model.ArticleID,
+		ArticleTitle:       model.ArticleModel.Title,
+	}).Error
+	if err != nil {
+		logrus.Error(err)
+	}
+}
