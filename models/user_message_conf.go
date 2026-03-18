@@ -1,7 +1,7 @@
 package models
 
 type UserMessageConfModel struct {
-	UserID             uint      `gorm:"primarykey;unique" json:"userID"`
+	UserID             uint      `gorm:"uniqueIndex" json:"userID"`
 	UserModel          UserModel `gorm:"foreignKey:UserID" json:"-"`
 	OpenCommentMessage bool      `json:"openCommentMessage"` //是否开启评论消息
 	OpenDiggMessage    bool      `json:"openDiggMessage"`    //是否开启点赞

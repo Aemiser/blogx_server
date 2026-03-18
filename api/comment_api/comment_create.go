@@ -11,6 +11,7 @@ import (
 	"blogx_server/service/message_service"
 	"blogx_server/service/redis_service/redis_article"
 	"blogx_server/service/redis_service/redis_comment"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,6 +59,7 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 
 			// 给父评论的人发消息,[这里实际是给该评论的父亲发消息，但是我觉得这里应该是给根评论的发消息会更好]
 			defer func() {
+				fmt.Println("父评论ID：", parentList[0].ID)
 				go message_service.InsertApplyMessage(parentList[0])
 			}()
 		}

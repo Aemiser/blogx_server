@@ -8,6 +8,7 @@ import (
 
 // 用户对文章的点赞表
 type ArticleDiggModel struct {
+	Model
 	UserID       uint           `gorm:"uniqueIndex:idx_name" json:"userID"`
 	UserModel    UserModel      `gorm:"foreignKey:UserID" json:"-"`
 	ArticleID    uint           `gorm:"uniqueIndex:idx_name" json:"articleID"`

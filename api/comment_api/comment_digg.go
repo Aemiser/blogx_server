@@ -6,6 +6,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/service/message_service"
 	"blogx_server/service/redis_service/redis_comment"
 
 	"github.com/gin-gonic/gin"
@@ -28,11 +29,12 @@ func (CommentApi) CommentDiggView(c *gin.Context) {
 	// 使用 Unscoped 来查询包括已软删除的记录
 	err = global.Db.Unscoped().Take(&digg, "comment_id = ? and user_id = ?", cr.ID, claims.Claims.UserID).Error
 	if err != nil {
-		// 记录不存在，创建新的点赞
-		err = global.Db.Create(&models.CommentDiggModel{
+		model := models.CommentDiggModel{
 			CommentID: cr.ID,
 			UserID:    claims.Claims.UserID,
-		}).Error
+		}
+		// 记录不存在，创建新的点赞
+		err = global.Db.Create(&model).Error
 		if err != nil {
 			res.FailWithMsg("点赞失败", c)
 			return
@@ -40,6 +42,7 @@ func (CommentApi) CommentDiggView(c *gin.Context) {
 		res.SuccessWithMsg("点赞成功", c)
 		// 写入缓存中
 		redis_comment.SetCacheDigg(comment.ID, 1)
+		message_service.InsertDiggCommentMessage(model)
 
 		return
 	}
@@ -67,6 +70,8 @@ func (CommentApi) CommentDiggView(c *gin.Context) {
 		}
 		res.SuccessWithMsg("点赞成功", c)
 		redis_comment.SetCacheDigg(comment.ID, 1)
+		message_service.InsertDiggCommentMessage(digg)
+
 	}
 	return
 }
