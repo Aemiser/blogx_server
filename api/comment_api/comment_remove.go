@@ -8,7 +8,9 @@ import (
 	"blogx_server/models"
 	"blogx_server/models/enum"
 	"blogx_server/service/comment_service"
+	"blogx_server/service/message_service"
 	"blogx_server/service/redis_service/redis_comment"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,6 +33,7 @@ func (CommentApi) CommentRemoveView(c *gin.Context) {
 			return
 		}
 	}
+	message_service.InsertSystemMessage(model.UserID, "管理员删除了你的评论", fmt.Sprintf("【%s】 评论不符合社区规范", model.Content), "", "")
 
 	//删评论
 	// 要找到所有的子评论和所有的父评论

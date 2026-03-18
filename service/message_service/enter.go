@@ -78,3 +78,17 @@ func InsertCollectArticleMessage(model models.UserArticleCollectModel) {
 		logrus.Error(err)
 	}
 }
+
+func InsertSystemMessage(revUserID uint, title string, content string, linkTitle string, linkHref string) {
+	err := global.Db.Create(&models.MessageModel{
+		Type:       message_type_enum.SystemType,
+		RecvUserID: revUserID,
+		Title:      title,
+		Content:    content,
+		LinkTitle:  linkTitle,
+		LinkHref:   linkHref,
+	}).Error
+	if err != nil {
+		logrus.Error(err)
+	}
+}
