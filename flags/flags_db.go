@@ -24,6 +24,7 @@ func FlagDB() {
 		&models.BannerModel{},
 		&models.GlobalNotificationModel{}, // 全局通知表
 		&models.UserLoginModel{},          // 用户日子志表
+		&models.CommentDiggModel{},        // 用户点赞表
 
 	)
 	if err != nil {

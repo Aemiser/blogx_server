@@ -21,12 +21,16 @@ type ArticleListRequest struct {
 	UserID     uint  `form:"userID"`
 	CategoryID *uint `form:"categoryID"`
 	Status     enum.ArticleStatus
+	CollectID  uint `form:"collectID"`
 }
 
 type ArticleListResponse struct {
 	models.ArticleModel
-	UserTop  bool `json:"userTop"`  // 用户是否置顶
-	AdminTop bool `json:"adminTop"` //管理员是否置顶
+	UserTop       bool    `json:"userTop"`  // 用户是否置顶
+	AdminTop      bool    `json:"adminTop"` //管理员是否置顶
+	UserNickname  string  `json:"nickName"`
+	UserAvatar    string  `json:"userAvatar"`
+	CategoryTitle *string `json:"categoryTitle"`
 }
 
 func (ArticleApi) ArticleListView(c *gin.Context) {
@@ -59,6 +63,21 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		}
 		cr.Status = 0
 		cr.Order = ""
+
+		if cr.CollectID != 0 {
+			// 如果传入了收藏夹ID，查权限
+			var userconf models.UserConfigModel
+			err := global.Db.Take(&userconf, "user_id = ?", cr.UserID).Error
+			if err != nil {
+				res.FailWithMsg("用户不存在", c)
+				return
+			}
+
+			if !userconf.OpenCollect {
+				res.FailWithMsg("用户未开放收藏功能", c)
+				return
+			}
+		}
 	case 2:
 		// 查自己
 		claims, err := jwts.ParseTokenByGin(c)
@@ -107,6 +126,7 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		Likes:        []string{"title"},
 		PageInfo:     cr.PageInfo,
 		DefaultOrder: "created_at desc",
+		Preloads:     []string{"Category", "UserModel"},
 	}
 
 	if len(topArticleIDList) > 0 {
@@ -124,19 +144,28 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 	// 响应数据封装
 	var list = make([]ArticleListResponse, 0)
 	collectMap := redis_article.GetAllCacheCollect()
-	LookMap := redis_article.GetAllCacheLook()
-	DiggMap := redis_article.GetAllCacheDigg()
+	lookMap := redis_article.GetAllCacheLook()
+	diggMap := redis_article.GetAllCacheDigg()
+	commentMap := redis_article.GetAllCacheComment()
 
 	for _, model := range _list {
 		model.Content = ""
-		model.DiggCount = model.DiggCount + DiggMap[model.ID]
+		model.DiggCount = model.DiggCount + diggMap[model.ID]
 		model.CollectCount = model.CollectCount + collectMap[model.ID]
-		model.LookCount = model.LookCount + LookMap[model.ID]
-		list = append(list, ArticleListResponse{
+		model.LookCount = model.LookCount + lookMap[model.ID]
+		model.CommentCount = model.LookCount + commentMap[model.ID]
+		date := ArticleListResponse{
 			ArticleModel: model,
 			UserTop:      userTopMap[model.ID],
 			AdminTop:     AdminTopMap[model.ID],
-		})
+			UserNickname: model.UserModel.Nickname,
+			UserAvatar:   model.UserModel.Avatar,
+		}
+
+		if model.Category != nil {
+			date.CategoryTitle = &model.Category.Title
+		}
+		list = append(list, date)
 	}
 	res.SuccessWithList(list, count, c)
 }

@@ -16,6 +16,7 @@ type ArticleModel struct {
 	Abstract     string             `gorm:"size:256" json:"abstract"`
 	Content      string             `json:"content"`
 	CategoryID   *uint              `json:"categoryID"`
+	Category     *CategoryModel     `gorm:"foreignKey:CategoryID" json:"-"`
 	TagList      ctype.List         `gorm:"type:longtext;" json:"tagList"` // 标签列表
 	Cover        string             `gorm:"size:256" json:"cover"`
 	UserID       uint               `json:"userID"`

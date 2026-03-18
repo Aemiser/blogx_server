@@ -107,3 +107,18 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 	global.Db.Model(&collectmodel).Update("article_count", gorm.Expr("article_count + 1"))
 	return
 }
+
+func (ArticleApi) ArticleCollectRemoveView(c *gin.Context) {
+	cr := middlerware.GetBind[models.IDListRequest](c)
+
+	claims := jwts.GetClaimsByGin(c)
+
+	var userCollectList []models.UserArticleCollectModel
+	global.Db.Find(&userCollectList, "id in ? and user_id = ?", cr.IDList, claims.Claims.UserID)
+
+	if len(userCollectList) > 0 {
+		global.Db.Delete(&userCollectList)
+	}
+
+	res.SuccessWithMsgf(c, "批量删除文章共 %d 条", len(userCollectList))
+}
