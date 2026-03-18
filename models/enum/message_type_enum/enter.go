@@ -5,7 +5,7 @@ type Type int8
 const (
 	CommentType Type = iota + 1
 	ApplyType
-	DiggARticleType
+	DiggArticleType
 	UnDiggArticleType
 	DiggCommentType
 	UnDiggCommentType

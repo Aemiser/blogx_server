@@ -16,6 +16,7 @@ type UserArticleCollectModel struct {
 	CollectModel CollectModel `gorm:"foreignKey:CollectID" json:"-"`         // 属于哪个收藏夹
 }
 
-func (u *UserArticleCollectModel) BeforeDelete(tx *gorm.DB) {
+func (u *UserArticleCollectModel) BeforeDelete(tx *gorm.DB) error {
 	redis_article.SetCacheCollect(u.ArticleID, false)
+	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/service/message_service"
 	"blogx_server/service/redis_service/redis_article"
 
 	"github.com/gin-gonic/gin"
@@ -28,18 +29,20 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 	// 使用 Unscoped 来查询包括已软删除的记录
 	err = global.Db.Unscoped().Take(&digg, "article_id = ? and user_id = ?", cr.ID, claims.Claims.UserID).Error
 	if err != nil {
-		// 记录不存在，创建新的点赞
-		err = global.Db.Create(&models.ArticleDiggModel{
+		model := models.ArticleDiggModel{
 			ArticleID: cr.ID,
-			UserID:    claims.Claims.UserID,
-		}).Error
+			UserID:    claims.Claims.UserID}
+		// 记录不存在，创建新的点赞
+		err = global.Db.Create(&model).Error
+
 		if err != nil {
 			res.FailWithMsg("点赞失败", c)
 			return
 		}
 		res.SuccessWithMsg("点赞成功", c)
 		redis_article.SetCacheDigg(article.ID, true)
-
+		// 给文章作者发信息
+		message_service.InsertDiggArticleMessage(model)
 		return
 	}
 
@@ -65,6 +68,8 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 		}
 		res.SuccessWithMsg("点赞成功", c)
 		redis_article.SetCacheDigg(article.ID, true)
+		// 给文章作者发信息
+		message_service.InsertDiggArticleMessage(digg)
 	}
 	return
 }
