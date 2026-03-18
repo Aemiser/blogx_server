@@ -28,10 +28,10 @@ func InsertCommentMessage(model models.CommentModel) {
 
 // InsertApplyMessage 插入一条回复消息
 func InsertApplyMessage(model models.CommentModel) {
-	global.Db.Preload("UserModel").Preload("ArticleModel").Take(&model)
+	global.Db.Preload("ParentModel").Preload("UserModel").Preload("ArticleModel").Take(&model)
 	err := global.Db.Create(&models.MessageModel{
 		Type:               message_type_enum.CommentType,
-		RecvUserID:         model.ArticleModel.UserID,
+		RecvUserID:         model.ParentModel.UserID,
 		ActionUserID:       model.UserID,
 		ActionUserNickName: model.UserModel.Nickname,
 		ActionUserAvatar:   model.UserModel.Avatar,

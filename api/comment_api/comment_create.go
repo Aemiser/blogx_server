@@ -39,6 +39,8 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 		ArticleID: cr.ArticleID,
 		ParentID:  cr.ParentID,
 	}
+
+	// TODO: 如果回复
 	// 找根评论
 	if cr.ParentID != nil {
 		// 找父评论
@@ -50,7 +52,14 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 		}
 		if len(parentList) > 0 {
 			model.RootParentID = &parentList[len(parentList)-1].ID
-			redis_comment.SetCacheApply(model.ArticleID, 1)
+			for _, commentModel := range parentList {
+				redis_comment.SetCacheApply(commentModel.ArticleID, 1)
+			}
+
+			// 给父评论的人发消息,[这里实际是给该评论的父亲发消息，但是我觉得这里应该是给根评论的发消息会更好]
+			defer func() {
+				go message_service.InsertApplyMessage(parentList[0])
+			}()
 		}
 	}
 
@@ -61,7 +70,7 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 	}
 
 	redis_article.SetCacheComment(cr.ArticleID, 1)
-	message_service.InsertCommentMessage(model)
+	go message_service.InsertCommentMessage(model)
 	res.SuccessWithMsg("评论成功", c)
 	return
 }
