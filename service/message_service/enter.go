@@ -12,6 +12,7 @@ import (
 // InsertCommentMessage 文章评论消息
 func InsertCommentMessage(model models.CommentModel) {
 	global.Db.Preload("UserModel").Preload("ArticleModel").Take(&model)
+	fmt.Println("评论的文章作者UID：", model.ArticleModel.UserID)
 	err := global.Db.Create(&models.MessageModel{
 		Type:               message_type_enum.CommentType,
 		RecvUserID:         model.ArticleModel.UserID,
