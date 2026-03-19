@@ -28,6 +28,7 @@ func FlagDB() {
 		&models.MessageModel{},                // 站内信表
 		&models.UserMessageConfModel{},        // 用户消息配置表
 		&models.UserGlobalnotificationModel{}, // 用户消息配置表
+		&models.UserFocusModel{},              // 用户粉丝表
 
 	)
 	if err != nil {
