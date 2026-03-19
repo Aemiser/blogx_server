@@ -57,7 +57,8 @@ func (FocusApi) FocusUserApi(c *gin.Context) {
 
 type FocusUserListRequest struct {
 	common.PageInfo
-	FocusUserID uint `json:"focusUserID" `
+	FocusUserID uint `form:"focusUserID" `
+	UserID      uint `form:"userID"`
 }
 
 type FocusUserListResponse struct {
@@ -71,8 +72,25 @@ type FocusUserListResponse struct {
 func (FocusApi) FocusUserListApi(c *gin.Context) {
 	cr := middlerware.GetBind[FocusUserListRequest](c)
 	userID := jwts.GetUserIDByGin(c)
+
+	if cr.UserID != 0 && userID != cr.UserID { // 排除自己情况的限制
+		var user models.UserConfigModel
+		err := global.Db.Take(&user, "user_id = ? ", cr.UserID).Error
+		if err != nil {
+			res.FailWithMsg("用户配置信息不存在", c)
+			return
+		}
+
+		if !user.OpenFollow {
+			res.FailWithMsg("用户未开放我的关注", c)
+			return
+		}
+	} else {
+		cr.UserID = userID
+	}
+
 	_list, count, _ := common.ListQuery(models.UserFocusModel{
-		UserID:      userID,
+		UserID:      cr.UserID,
 		FocusUserID: cr.FocusUserID,
 	}, common.Options{
 		PageInfo: cr.PageInfo,
