@@ -92,3 +92,11 @@ func GetClaimsByGin(c *gin.Context) (claims *MyClaims) {
 	}
 	return
 }
+
+func GetUserIDByGin(c *gin.Context) uint {
+	claims := GetClaimsByGin(c)
+	if claims == nil {
+		return 0
+	}
+	return claims.Claims.UserID
+}
