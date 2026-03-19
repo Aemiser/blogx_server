@@ -86,7 +86,12 @@ func (FocusApi) FocusUserListApi(c *gin.Context) {
 			return
 		}
 	} else {
-		cr.UserID = userID
+		claims, err := jwts.ParseTokenByGin(c)
+		if err != nil {
+			res.FailWithMsg("请登录", c)
+			return
+		}
+		cr.UserID = claims.Claims.UserID
 	}
 
 	_list, count, _ := common.ListQuery(models.UserFocusModel{
@@ -104,6 +109,58 @@ func (FocusApi) FocusUserListApi(c *gin.Context) {
 			FocusUserAvatar:   model.FocusUserModel.Avatar,
 			FocusUserAbstract: model.FocusUserModel.Abstract,
 			CreateAt:          model.CreatedAt,
+		})
+	}
+	res.SuccessWithList(list, count, c)
+}
+
+type FansUserListResponse struct {
+	FansUserID       uint      `json:"fansUserID"`
+	FansUserNickname string    `json:"fansUserNickname"`
+	FansUserAvatar   string    `json:"fansUserAvatar"`
+	FansUserAbstract string    `json:"fansUserAbstract"`
+	CreateAt         time.Time `json:"createAt"`
+}
+
+func (FocusApi) FansUserListApi(c *gin.Context) {
+	cr := middlerware.GetBind[FocusUserListRequest](c)
+
+	if cr.UserID != 0 {
+		var user models.UserConfigModel
+		err := global.Db.Take(&user, "user_id = ? ", cr.UserID).Error
+		if err != nil {
+			res.FailWithMsg("用户配置信息不存在", c)
+			return
+		}
+
+		if !user.OpenFans {
+			res.FailWithMsg("用户未开放我的粉丝", c)
+			return
+		}
+	} else {
+		claims, err := jwts.ParseTokenByGin(c)
+		if err != nil {
+			res.FailWithMsg("请登录", c)
+			return
+		}
+		cr.UserID = claims.Claims.UserID
+	}
+
+	_list, count, _ := common.ListQuery(models.UserFocusModel{
+		UserID:      cr.FocusUserID,
+		FocusUserID: cr.UserID,
+	}, common.Options{
+		PageInfo: cr.PageInfo,
+		Preloads: []string{"FocusUserModel"}})
+
+	var list = make([]FansUserListResponse, 0)
+	for _, model := range _list {
+		list = append(list, FansUserListResponse{
+			FansUserID:       model.UserID,
+			FansUserNickname: model.UserModel.Nickname,
+			FansUserAvatar:   model.UserModel.Avatar,
+			FansUserAbstract: model.UserModel.Abstract,
+			CreateAt:         model.CreatedAt,
 		})
 	}
 	res.SuccessWithList(list, count, c)
