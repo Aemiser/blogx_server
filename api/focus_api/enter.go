@@ -1,11 +1,13 @@
 package focus_api
 
 import (
+	"blogx_server/common"
 	"blogx_server/common/jwts"
 	"blogx_server/common/res"
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -51,4 +53,40 @@ func (FocusApi) FocusUserApi(c *gin.Context) {
 
 	res.SuccessWithMsg("关注成功", c)
 	return
+}
+
+type FocusUserListRequest struct {
+	common.PageInfo
+	FocusUserID uint `json:"focusUserID" `
+}
+
+type FocusUserListResponse struct {
+	FocusUserID       uint      `json:"focusUserID"`
+	FocusUserNickname string    `json:"focusUserNickname"`
+	FocusUserAvatar   string    `json:"focusUserAvatar"`
+	FocusUserAbstract string    `json:"focusUserAbstract"`
+	CreateAt          time.Time `json:"createAt"`
+}
+
+func (FocusApi) FocusUserListApi(c *gin.Context) {
+	cr := middlerware.GetBind[FocusUserListRequest](c)
+	userID := jwts.GetUserIDByGin(c)
+	_list, count, _ := common.ListQuery(models.UserFocusModel{
+		UserID:      userID,
+		FocusUserID: cr.FocusUserID,
+	}, common.Options{
+		PageInfo: cr.PageInfo,
+		Preloads: []string{"FocusUserModel"}})
+
+	var list = make([]FocusUserListResponse, 0)
+	for _, model := range _list {
+		list = append(list, FocusUserListResponse{
+			FocusUserID:       model.FocusUserID,
+			FocusUserNickname: model.FocusUserModel.Nickname,
+			FocusUserAvatar:   model.FocusUserModel.Avatar,
+			FocusUserAbstract: model.FocusUserModel.Abstract,
+			CreateAt:          model.CreatedAt,
+		})
+	}
+	res.SuccessWithList(list, count, c)
 }
