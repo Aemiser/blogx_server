@@ -29,6 +29,8 @@ func FlagDB() {
 		&models.UserMessageConfModel{},        // 用户消息配置表
 		&models.UserGlobalnotificationModel{}, // 用户消息配置表
 		&models.UserFocusModel{},              // 用户粉丝表
+		&models.UserChatAtionModel{},          // 用户聊天操作表
+		&models.ChatModel{},                   // 用户聊天表
 
 	)
 	if err != nil {

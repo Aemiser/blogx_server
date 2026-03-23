@@ -7,6 +7,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -118,11 +119,11 @@ type FocusUserListResponse struct {
 func (FocusApi) FocusUserListApi(c *gin.Context) {
 	cr := middlerware.GetBind[FocusUserListRequest](c)
 	userID := jwts.GetUserIDByGin(c)
-
+	claims, err := jwts.ParseTokenByGin(c)
 	if cr.UserID != 0 && userID != cr.UserID { // 排除自己情况的限制
 		var user models.UserConfigModel
-		err := global.Db.Take(&user, "user_id = ? ", cr.UserID).Error
-		if err != nil {
+		err1 := global.Db.Take(&user, "user_id = ? ", cr.UserID).Error
+		if err1 != nil {
 			res.FailWithMsg("用户配置信息不存在", c)
 			return
 		}
@@ -131,8 +132,15 @@ func (FocusApi) FocusUserListApi(c *gin.Context) {
 			res.FailWithMsg("用户未开放我的关注", c)
 			return
 		}
+
+		if claims == nil && err != nil {
+			if cr.Limit > 10 || cr.Page > 1 {
+				res.FailWithMsg("登录查看更多", c)
+				return
+			}
+
+		}
 	} else {
-		claims, err := jwts.ParseTokenByGin(c)
 		if err != nil {
 			res.FailWithMsg("请登录", c)
 			return
@@ -140,12 +148,26 @@ func (FocusApi) FocusUserListApi(c *gin.Context) {
 		cr.UserID = claims.Claims.UserID
 	}
 
+	query := global.Db.Where("")
+	if cr.Key != "" {
+		// 模糊匹配用户
+		var userIDList []models.UserModel
+		global.Db.Model(models.UserModel{}).Where("nickname like ?", fmt.Sprintf("%%%s%%", cr.Key)).
+			Select("id").Scan(&userIDList)
+
+		if len(userIDList) > 0 {
+			query.Where("focus_user_id in ?", userIDList)
+		}
+	}
+
 	_list, count, _ := common.ListQuery(models.UserFocusModel{
 		UserID:      cr.UserID,
 		FocusUserID: cr.FocusUserID,
 	}, common.Options{
 		PageInfo: cr.PageInfo,
-		Preloads: []string{"FocusUserModel"}})
+		Preloads: []string{"FocusUserModel"},
+		Where:    query,
+	})
 
 	var list = make([]FocusUserListResponse, 0)
 	for _, model := range _list {
