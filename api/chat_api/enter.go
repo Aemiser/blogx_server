@@ -38,6 +38,13 @@ func (ChatApi) ChatListView(c *gin.Context) {
 	claims := jwts.GetClaimsByGin(c)
 	userID := claims.Claims.UserID
 	var deletedIDList []uint
+	var UserChatActionList []models.UserChatAtionModel
+	var chatReadMap = map[uint]bool{}
+
+	global.Db.Find(&UserChatActionList, "user_id = ? and (is_delete = ? or is_delete is null)", cr.RevUserID, false)
+	for _, model := range UserChatActionList {
+		chatReadMap[model.ChatID] = true
+	}
 	switch cr.Type {
 	case 1: // 前台用户看
 		cr.SendUserID = userID
@@ -76,6 +83,7 @@ func (ChatApi) ChatListView(c *gin.Context) {
 			SendUserAvatar:   model.RevUserModel.Avatar,
 			RevUserNickname:  model.SeedUserModel.Nickname,
 			RevUserAvatar:    model.RevUserModel.Avatar,
+			IsRead:           chatReadMap[model.ID],
 		}
 
 		if model.SeedUserID == userID {
