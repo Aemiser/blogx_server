@@ -4,6 +4,7 @@ import (
 	"blogx_server/api/article_api"
 	"blogx_server/api/banner_api"
 	"blogx_server/api/captcha_api"
+	"blogx_server/api/chat_api"
 	"blogx_server/api/comment_api"
 	"blogx_server/api/focus_api"
 	"blogx_server/api/global_notification_api"
@@ -26,6 +27,7 @@ type Api struct {
 	SiteMsgAPi            site_msg_api.SiteMsgApi
 	GlobalNotificationApi global_notification_api.GlobalNotificationApi
 	FocusApi              focus_api.FocusApi
+	ChatApi               chat_api.ChatApi
 }
 
 var App = Api{}
