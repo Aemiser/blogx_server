@@ -1,10 +1,5 @@
 package models
 
-import (
-	"blogx_server/global"
-	"blogx_server/models/enum/relationship_enum"
-)
-
 type UserFocusModel struct {
 	Model
 	UserID         uint      `json:"userID"`
