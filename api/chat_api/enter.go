@@ -7,6 +7,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/models/enum"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +17,9 @@ type ChatApi struct {
 
 type ChatListRequest struct {
 	common.PageInfo
-	UserID uint `form:"userID"` // 查找我和他的聊天记录
+	SendUserID uint `form:"sendUserID"`                        // 查找我和他的聊天记录
+	RevUserID  uint `form:"recUserID" binding:"required"`      // 查找我和他的聊天记录
+	Type       int8 `form:"type,oneof=1 2" binding:"required"` // 1：前台用户  2：管理员
 }
 
 type ChatListResponse struct {
@@ -26,15 +29,39 @@ type ChatListResponse struct {
 	RevUserNickname  string `json:"revUserNickname"`
 	RevUserAvatar    string `json:"revUserAvatar"`
 	IsMe             bool   `json:"isMe"` // 是否是我发送的
+	IsRead           bool   `json:"isRead"`
 }
 
 func (ChatApi) ChatListView(c *gin.Context) {
 	cr := middlerware.GetBind[ChatListRequest](c)
 
-	userID := jwts.GetUserIDByGin(c)
+	claims := jwts.GetClaimsByGin(c)
+	userID := claims.Claims.UserID
+	var deletedIDList []uint
+	switch cr.Type {
+	case 1: // 前台用户看
+		cr.SendUserID = userID
+		// 找我删除的记录
 
+		global.Db.Model(models.UserChatAtionModel{}).Where("user_id = ? and is_delete = ?",
+			userID, true).Select("chat_id").Scan(&deletedIDList)
+
+	case 2: // 管理员看
+		if claims.Claims.Role != enum.AdminRole {
+			res.FailWithMsg("无权限", c)
+			return
+		}
+		if cr.SendUserID == 0 {
+			res.FailWithMsg("SendUserID必填", c)
+			return
+		}
+	}
 	query := global.Db.Where("(seed_user_id = ? and rev_user_id = ?) or (seed_user_id = ? and rev_user_id = ?)",
-		cr.UserID, userID, userID, cr.UserID)
+		cr.SendUserID, cr.RevUserID, cr.RevUserID, cr.SendUserID)
+
+	if len(deletedIDList) > 0 {
+		query = query.Where("id not in ?", deletedIDList)
+	}
 	_list, count, _ := common.ListQuery(models.ChatModel{}, common.Options{
 		PageInfo: cr.PageInfo,
 		Preloads: []string{"SeedUserModel", "RevUserModel"},
