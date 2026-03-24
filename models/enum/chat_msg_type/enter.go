@@ -6,4 +6,6 @@ const (
 	TextMsgType MsgType = iota + 1
 	ImageMsgType
 	MarkdownMsgType
+
+	MsgReadMsg = iota + 8
 )
