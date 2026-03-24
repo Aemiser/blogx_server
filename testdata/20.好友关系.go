@@ -15,7 +15,7 @@ func main() {
 
 	// 执行测试
 	//chat_service.ToTextChat(1, 2, "你好")
-	chat_service.ToTextChat(1, 4, "你好")
-	chat_service.ToImageChat(1, 4, "http://baidu.com")
-	chat_service.ToImageChat(4, 1, "http://baidu.22")
+	chat_service.ToTextChat(2, 4, "你好")
+	chat_service.ToImageChat(2, 4, "http://baidu.com")
+	chat_service.ToImageChat(2, 1, "http://baidu.22")
 }
