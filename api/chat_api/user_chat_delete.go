@@ -1,6 +1,7 @@
 package chat_api
 
 import (
+	"blogx_server/common"
 	"blogx_server/common/jwts"
 	"blogx_server/common/res"
 	"blogx_server/global"
@@ -11,38 +12,54 @@ import (
 )
 
 func (ChatApi) UserChatDeleteView(c *gin.Context) {
-	cr := middlerware.GetBind[models.IDRequest](c)
+	cr := middlerware.GetBind[models.IDListRequest](c)
 	userID := jwts.GetUserIDByGin(c)
 
-	var chat models.ChatModel
-	err := global.Db.Take(&chat, cr.ID).Error
-	if err != nil {
-		res.FailWithMsg("消息不存在", c)
-		return
-	}
+	// 查找对应的聊天信息
+	var chatList []models.ChatModel
+	global.Db.Find(&chatList, "id in ?", cr.IDList)
 
 	// 之前是否操作过
-	var chatAc models.UserChatAtionModel
-	err = global.Db.Take(&chatAc, "user_id = ? and chat_id = ?", userID, chat.ID).Error
-	// 不存在，则直接创建操作记录，如果是我自己删除的话，就不用管是不是已读
-	if err != nil {
-		global.Db.Create(&models.UserChatAtionModel{
-			UserID:   userID,
-			ChatID:   chat.ID,
-			IsDelete: true,
-		})
-		res.SuccessWithMsg("消息删除成功", c)
-		return
+	chatMap := common.ScanMapV2(models.UserChatAtionModel{}, common.ScanMapOptions{
+		Where: global.Db.Where("user_id = ? and chat_id in ?", userID, cr.IDList),
+		Key:   "ChatID",
+	})
+
+	var addChatAcList []models.UserChatAtionModel
+	var updateChatAcIDList []uint
+	// 判断消息是不是被操作过了
+	for _, model := range chatList {
+		chat, ok := chatMap[model.ID]
+		if !ok { // 如果未存在，即创建
+			addChatAcList = append(addChatAcList, models.UserChatAtionModel{
+				UserID:   userID,
+				ChatID:   model.ID,
+				IsDelete: true,
+			})
+			continue
+		}
+		if chat.IsDelete {
+			continue
+		}
+		updateChatAcIDList = append(updateChatAcIDList, chat.ID)
 	}
 
-	if chatAc.IsDelete {
-		// 说明之前已经删除了
-		res.SuccessWithMsg("消息已删除", c)
-		return
+	if len(addChatAcList) > 0 {
+		err := global.Db.Debug().Create(&addChatAcList).Error
+		if err != nil {
+			res.FailWithMsg("删除消息失败", c)
+			return
+		}
 	}
 
-	global.Db.Model(&chatAc).Update("is_delete", true)
-	res.SuccessWithMsg("消息删除成功", c)
+	if len(updateChatAcIDList) > 0 {
+		err := global.Db.Debug().Model(&models.UserChatAtionModel{}).Where("id in ?", updateChatAcIDList).Update("is_delete", true).Error
+		if err != nil {
+			res.FailWithMsg("删除消息失败", c)
+			return
+		}
+	}
+	res.SuccessWithMsg("删除消息成功", c)
 	return
 
 }

@@ -95,11 +95,13 @@ func (ChatApi) SessionListView(c *gin.Context) {
 	}
 
 	userMap := common.ScanMapV2(models.UserModel{}, common.ScanMapOptions{
-		global.Db.Where("id in ?", userIDList),
+		Where: global.Db.Where("id in ?", userIDList),
+		Key:   "",
 	})
 
 	chatMap := common.ScanMapV2(models.ChatModel{}, common.ScanMapOptions{
 		Where: global.Db.Where("id in ?", chatIDList),
+		Key:   "",
 	})
 
 	relationMap := focus_service.CalcUserPatchRelationship(userID, userIDList)
