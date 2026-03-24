@@ -4,6 +4,7 @@ import (
 	"blogx_server/api"
 	"blogx_server/api/chat_api"
 	"blogx_server/middlerware"
+	"blogx_server/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,4 +13,5 @@ func ChatRouter(r *gin.RouterGroup) {
 	app := api.App.ChatApi
 	r.GET("chat/record", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[chat_api.ChatListRequest], app.ChatListView)
 	r.GET("chat/session", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[chat_api.SessionListRequest], app.SessionListView)
+	r.DELETE("chat/:id", middlerware.AuthMiddleware, middlerware.BindUriMiddlerware[models.IDRequest], app.UserChatDeleteView)
 }
