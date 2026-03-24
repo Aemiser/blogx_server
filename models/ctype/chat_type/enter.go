@@ -12,7 +12,7 @@ type MarkdownMsg struct {
 	Content string
 }
 type ChatMsg struct {
-	ContentMsg  *ContentMsg  `json:"contentMsg"`
-	ImagetMsg   *ImagetMsg   `json:"imagetMsg"`
-	MarkdownMsg *MarkdownMsg `json:"markdownMsg"`
+	ContentMsg  *ContentMsg  `json:"contentMsg,omitempty"`
+	ImagetMsg   *ImagetMsg   `json:"imagetMsg,omitempty"`
+	MarkdownMsg *MarkdownMsg `json:"markdownMsg,omitempty"`
 }

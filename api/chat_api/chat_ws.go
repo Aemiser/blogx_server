@@ -54,6 +54,12 @@ func (ChatApi) ChatView(c *gin.Context) {
 	}
 
 	userID := claims.Claims.UserID
+	var user models.UserModel
+	err = global.Db.Take(&user, userID).Error
+	if err != nil {
+		res.FailWithMsg("用户不存在", c)
+		return
+	}
 	addr := conn.RemoteAddr().String()
 	addrMap, ok := OnlineMap[userID]
 	if !ok { // 不存在即创建
@@ -94,15 +100,30 @@ func (ChatApi) ChatView(c *gin.Context) {
 			continue
 		}
 
+		model := models.ChatModel{
+			SeedUserID: userID,
+			RevUserID:  req.RevUserID,
+			MsgType:    req.MsgType,
+			Msg:        req.Msg,
+		}
+		err = global.Db.Create(&model).Error
+		if err != nil {
+			res.SendConnFailWithMsg("消息发送失败", conn)
+			continue
+		}
 		item := ChatResponse{
 			ChatListResponse: ChatListResponse{
-				ChatModel: models.ChatModel{
-					MsgType: req.MsgType,
-					Msg:     req.Msg,
-				},
+				ChatModel:        model,
+				SendUserNickname: user.Nickname,
+				SendUserAvatar:   user.Avatar,
+				RevUserNickname:  revUser.Nickname,
+				RevUserAvatar:    revUser.Avatar,
 			},
 		}
+		// 发给对方
 		res.SendWsMsg(OnlineMap, req.RevUserID, item)
+		// 发给自己
+		item.IsMe = true
 		res.SendConnOkWithData(item, conn)
 	}
 	defer conn.Close()
