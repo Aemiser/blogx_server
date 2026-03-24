@@ -3,6 +3,11 @@ package chat_api
 import (
 	"blogx_server/common/jwts"
 	"blogx_server/common/res"
+	"blogx_server/global"
+	"blogx_server/models"
+	"blogx_server/models/ctype/chat_type"
+	"blogx_server/models/enum/chat_msg_type"
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -22,6 +27,16 @@ var UP = websocket.Upgrader{
 //
 //	==> websocket地址 ==> websocket连接
 var OnlineMap = map[uint]map[string]*websocket.Conn{}
+
+type ChatRequest struct {
+	RevUserID uint                  `json:"revUserID"` // 发给谁
+	MsgType   chat_msg_type.MsgType `json:"msgType"`   // 1 文本 2 图片 3 md
+	Msg       chat_type.ChatMsg     `json:"msg"`       // 信息主体
+}
+
+type ChatResponse struct {
+	ChatListResponse
+}
 
 func (ChatApi) ChatView(c *gin.Context) {
 	// 用户认证
@@ -52,11 +67,10 @@ func (ChatApi) ChatView(c *gin.Context) {
 			OnlineMap[userID][addr] = conn
 		}
 	}
-	fmt.Println("进入", OnlineMap)
 
 	for {
 		// 消息类型，消息，错误
-		t, p, err := conn.ReadMessage()
+		_, p, err := conn.ReadMessage()
 		if err != nil {
 			fmt.Println(err) // websocket: close 1005 (no status) :客户端断开
 			if err == io.EOF {
@@ -64,8 +78,32 @@ func (ChatApi) ChatView(c *gin.Context) {
 			}
 			break
 		}
-		conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("你说的是：%s吗？", string(p))))
-		fmt.Println(t, string(p))
+
+		var req ChatRequest
+		err2 := json.Unmarshal(p, &req)
+		if err2 != nil {
+			res.SendConnFailWithMsg("参数错误", conn)
+			continue
+
+		}
+		// 判断接受人在不在
+		var revUser models.UserModel
+		err1 := global.Db.Take(&revUser, req.RevUserID).Error
+		if err1 != nil {
+			res.SendConnFailWithMsg("接受人不存在", conn)
+			continue
+		}
+
+		item := ChatResponse{
+			ChatListResponse: ChatListResponse{
+				ChatModel: models.ChatModel{
+					MsgType: req.MsgType,
+					Msg:     req.Msg,
+				},
+			},
+		}
+		res.SendWsMsg(OnlineMap, req.RevUserID, item)
+		res.SendConnOkWithData(item, conn)
 	}
 	defer conn.Close()
 
@@ -79,6 +117,5 @@ func (ChatApi) ChatView(c *gin.Context) {
 			delete(OnlineMap, userID)
 		}
 	}
-	fmt.Println("离开", OnlineMap)
 	fmt.Println("服务关闭")
 }
