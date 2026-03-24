@@ -32,6 +32,7 @@ func CalcUserPatchRelationship(A uint, BList []uint) (m map[uint]relationship_en
 		"(user_id = ? OR focus_user_id in ?) or (focus_user_id = ? OR  user_id in  ?)",
 		A, BList, A, BList)
 
+	m = make(map[uint]relationship_enum.Relation)
 	for _, B := range BList {
 		m[B] = relationship_enum.RelationStranger
 

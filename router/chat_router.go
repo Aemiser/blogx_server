@@ -11,4 +11,5 @@ import (
 func ChatRouter(r *gin.RouterGroup) {
 	app := api.App.ChatApi
 	r.GET("chat/record", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[chat_api.ChatListRequest], app.ChatListView)
+	r.GET("chat/session", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[chat_api.SessionListRequest], app.SessionListView)
 }
