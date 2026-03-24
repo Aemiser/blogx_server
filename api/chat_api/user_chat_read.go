@@ -54,7 +54,7 @@ func (ChatApi) UserChatReadView(c *gin.Context) {
 		return
 	}
 
-	global.Db.Model(&chat).Update("is_read", true)
+	global.Db.Model(&models.UserChatAtionModel{}).Where("user_id = ? and chat_id = ?", userID, chat.ID).Update("is_read", true)
 	res.SendWsMsg(OnlineMap, chat.SeedUserID, item)
 	res.SuccessWithMsg("消息读取成功", c)
 
