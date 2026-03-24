@@ -25,6 +25,9 @@ type UserModel struct {
 	Addr            string                  `gorm:"size:32" json:"addr"`
 }
 
+func (u UserModel) GetID() uint {
+	return u.ID
+}
 func (u *UserModel) AfterCreate(tx *gorm.DB) (err error) {
 	err = tx.Create(&UserConfigModel{UserID: u.ID,
 		OpenCollect: true,
