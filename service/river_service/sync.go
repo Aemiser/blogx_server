@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/juju/errors"
-	"github.com/siddontang/go-log/log"
 	"github.com/siddontang/go-mysql/canal"
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/siddontang/go-mysql/replication"
 	"github.com/siddontang/go-mysql/schema"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -67,10 +67,10 @@ func (h *eventHandler) OnXID(nextPos mysql.Position) error {
 }
 
 func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
-	log.Infof("收到 binlog 事件：action=%s, schema=%s, table=%s, rows=%d", e.Action, e.Table.Schema, e.Table.Name, len(e.Rows))
+	logrus.Infof("[ONROW] 收到 binlog 事件：action=%s, schema=%s, table=%s, rows=%d", e.Action, e.Table.Schema, e.Table.Name, len(e.Rows))
 	rule, ok := h.r.rules[ruleKey(e.Table.Schema, e.Table.Name)]
 	if !ok {
-		log.Warnf("未找到对应的规则，忽略事件：schema=%s, table=%s", e.Table.Schema, e.Table.Name)
+		logrus.Warnf("[ONROW] 未找到对应的规则，忽略事件：schema=%s, table=%s", e.Table.Schema, e.Table.Name)
 		return nil
 	}
 
@@ -89,12 +89,14 @@ func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
 
 	if err != nil {
 		h.r.cancel()
-		log.Errorf("make %s ES request err %v, close sync", e.Action, err)
+		logrus.Errorf("[ONROW] make %s ES request err %v, close sync", e.Action, err)
 		return errors.Errorf("make %s ES request err %v, close sync", e.Action, err)
 	}
 
-	log.Infof("准备同步 %d 条请求到 ES, action=%s", len(reqs), e.Action)
+	logrus.Infof("[ONROW] 准备同步 %d 条请求到 ES, action=%s", len(reqs), e.Action)
+	logrus.Infof("[ONROW] 发送数据到 syncCh, channel 长度：%d", len(h.r.syncCh))
 	h.r.syncCh <- reqs
+	logrus.Infof("[ONROW] 发送完成")
 
 	return h.r.ctx.Err()
 }
@@ -156,16 +158,16 @@ func (r *River) syncLoop() {
 		if needFlush {
 			// TODO: retry some times?
 			if err := r.doBulk(reqs); err != nil {
-				log.Errorf("do ES bulk err %v, close sync", err)
+				logrus.Errorf("do ES bulk err %v, close sync", err)
 				r.cancel()
-				return
+				//return
 			}
 			reqs = reqs[0:0]
 		}
 
 		if needSavePos {
 			if err := r.master.Save(pos); err != nil {
-				log.Errorf("save sync position %s err %v, close sync", pos, err)
+				logrus.Errorf("save sync position %s err %v, close sync", pos, err)
 				r.cancel()
 				return
 			}
@@ -177,10 +179,18 @@ func (r *River) syncLoop() {
 func (r *River) makeRequest(rule *rule.Rule, action string, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
 	reqs := make([]*elastic.BulkRequest, 0, len(rows))
 
-	for _, values := range rows {
+	for i, values := range rows {
+		logrus.Debugf("[makeRequest] action=%s, row=%d, values=%+v, len=%d", action, i, values, len(values))
+
 		id, err := r.getDocID(rule, values)
 		if err != nil {
+			logrus.Errorf("[makeRequest] 获取 ID 失败: action=%s, err=%v, values=%+v", action, err, values)
 			return nil, errors.Trace(err)
+		}
+
+		if id == "" {
+			logrus.Errorf("[makeRequest] ID 为空: action=%s, row=%d, values=%+v", action, i, values)
+			continue
 		}
 
 		parentID := ""
@@ -205,7 +215,12 @@ func (r *River) makeRequest(rule *rule.Rule, action string, rows [][]interface{}
 }
 
 func (r *River) makeInsertRequest(rule *rule.Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
-	return r.makeRequest(rule, canal.InsertAction, rows)
+	logrus.Infof("[SYNC] makeInsertRequest: rule=%s.%s -> index=%s, rows=%d", rule.Schema, rule.Table, rule.Index, len(rows))
+	result, err := r.makeRequest(rule, canal.InsertAction, rows)
+	if err == nil {
+		logrus.Infof("[SYNC] makeInsertRequest 完成，生成 %d 条 bulk 请求", len(result))
+	}
+	return result, err
 }
 
 func (r *River) makeDeleteRequest(rule *rule.Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
@@ -277,7 +292,7 @@ func (r *River) makeReqColumnData(col *schema.TableColumn, value interface{}) in
 			eNum := value - 1
 			if eNum < 0 || eNum >= int64(len(col.EnumValues)) {
 				// we insert invalid enum value before, so return empty
-				log.Warnf("invalid binlog enum index %d, for enum %v", eNum, col.EnumValues)
+				logrus.Warnf("invalid binlog enum index %d, for enum %v", eNum, col.EnumValues)
 				return ""
 			}
 
@@ -331,7 +346,8 @@ func (r *River) makeReqColumnData(col *schema.TableColumn, value interface{}) in
 			if err != nil || vt.IsZero() { // failed to parse date or zero date
 				return nil
 			}
-			return vt.Format(time.RFC3339)
+			// 匹配 ES mapping 的格式: yyyy-MM-dd HH:mm:ss
+			return vt.Format("2006-01-02 15:04:05")
 		}
 	case schema.TYPE_DATE:
 		switch v := value.(type) {
@@ -423,18 +439,24 @@ func (r *River) getDocID(rule *rule.Rule, row []interface{}) (string, error) {
 		ids []interface{}
 		err error
 	)
-	if rule.ID == nil {
+	if rule.ID == nil || len(rule.ID) == 0 {
+		logrus.Debugf("[getDocID] 使用主键获取 ID, row=%+v", row)
 		ids, err = rule.TableInfo.GetPKValues(row)
 		if err != nil {
+			logrus.Errorf("[getDocID] GetPKValues 失败: %v, row=%+v", err, row)
 			return "", err
 		}
+		logrus.Debugf("[getDocID] 主键值: %+v", ids)
 	} else {
+		logrus.Debugf("[getDocID] 使用配置的 ID 字段: %+v, row=%+v", rule.ID, row)
 		ids = make([]interface{}, 0, len(rule.ID))
 		for _, column := range rule.ID {
 			value, err := rule.TableInfo.GetColumnValue(column, row)
 			if err != nil {
+				logrus.Errorf("[getDocID] GetColumnValue 失败: column=%s, err=%v, row=%+v", column, err, row)
 				return "", err
 			}
+			logrus.Debugf("[getDocID] 字段 %s 的值: %v", column, value)
 			ids = append(ids, value)
 		}
 	}
@@ -444,6 +466,7 @@ func (r *River) getDocID(rule *rule.Rule, row []interface{}) (string, error) {
 	sep := ""
 	for i, value := range ids {
 		if value == nil {
+			logrus.Errorf("[getDocID] 第 %d 个 ID 值为 nil, ids=%+v", i, ids)
 			return "", errors.Errorf("The %ds id or PK value is nil", i)
 		}
 
@@ -451,7 +474,9 @@ func (r *River) getDocID(rule *rule.Rule, row []interface{}) (string, error) {
 		sep = ":"
 	}
 
-	return buf.String(), nil
+	id := buf.String()
+	logrus.Debugf("[getDocID] 最终 ID: %s", id)
+	return id, nil
 }
 
 func (r *River) getParentID(rule *rule.Rule, row []interface{}, columnName string) (string, error) {
@@ -468,24 +493,67 @@ func (r *River) doBulk(reqs []*elastic.BulkRequest) error {
 		return nil
 	}
 
-	log.Infof("开始批量同步 %d 条请求到 ES", len(reqs))
+	logrus.Infof("开始批量同步 %d 条请求到 ES", len(reqs))
 
-	if resp, err := r.es.Bulk(reqs); err != nil {
-		log.Errorf("sync docs err %v after binlog %s", err, r.canal.SyncedPosition())
+	start := time.Now()
+	resp, err := r.es.Bulk(reqs)
+	duration := time.Since(start)
+	logrus.Infof("r.es.Bulk 调用完成，耗时：%v, err: %v", duration, err)
+
+	// 打印详细的请求信息用于调试
+	if global.Config.River.Debug {
+		logrus.Debugf("Bulk 请求详情：reqs count=%d", len(reqs))
+		for i, req := range reqs {
+			logrus.Debugf("  [%d] Action=%s, Index=%s, Type=%s, ID=%s", i, req.Action, req.Index, req.Type, req.ID)
+		}
+	}
+
+	if err != nil {
+		logrus.Errorf("sync docs err %v after binlog %s", err, r.canal.SyncedPosition())
 		return errors.Trace(err)
-	} else if resp.Code/100 == 2 || resp.Errors {
-		for i := 0; i < len(resp.Items); i++ {
-			for action, item := range resp.Items[i] {
-				if len(item.Error) > 0 {
-					log.Errorf("%s index: %s, type: %s, id: %s, status: %d, error: %s",
-						action, item.Index, item.Type, item.ID, item.Status, item.Error)
+	} else if resp.Errors {
+		logrus.Errorf("ES Bulk 包含错误，开始遍历 %d 个 items...", len(resp.Items))
+		for i, item := range resp.Items {
+			for action, result := range item {
+				if result.Error != nil {
+					var details struct {
+						Type     string `json:"type"`
+						Reason   string `json:"reason"`
+						Index    string `json:"index"`
+						CausedBy struct {
+							Type   string `json:"type"`
+							Reason string `json:"reason"`
+						} `json:"caused_by"`
+					}
+					if err := json.Unmarshal(result.Error, &details); err != nil {
+						logrus.Errorf("  [Item %d] 无法解析错误 JSON: %v, 原始内容: %s", i, err, string(result.Error))
+					} else {
+						logrus.Errorf("  [Item %d] ID=%s Action=%s Status=%d", i, result.ID, action, result.Status)
+						logrus.Errorf("    错误类型: %s", details.Type)
+						logrus.Errorf("    错误原因: %s", details.Reason)
+						if details.CausedBy.Reason != "" {
+							logrus.Errorf("    根本原因: %s: %s", details.CausedBy.Type, details.CausedBy.Reason)
+						}
+					}
 				} else {
-					log.Infof("ES 操作成功：%s, index: %s, id: %s", action, item.Index, item.ID)
+					logrus.Infof("  [Item %d] ID=%s Action=%s Status=%d 成功", i, result.ID, action, result.Status)
 				}
 			}
 		}
+		return errors.Errorf("ES bulk operation has %d items with errors", len(resp.Items))
+	} else if resp.Code/100 == 2 {
+		logrus.Infof("批量同步成功，处理了 %d 个索引项，耗时：%v", len(resp.Items), duration)
 	} else {
-		log.Infof("批量同步成功，处理了 %d 个索引项", len(resp.Items))
+		logrus.Errorf("ES bulk 操作失败，code=%d", resp.Code)
+		if resp.RawResponse != "" {
+			logrus.Errorf("ES 响应内容: %s", resp.RawResponse)
+		}
+		// 打印请求详情用于调试
+		logrus.Errorf("请求的 bulk 项目数: %d", len(reqs))
+		for i, req := range reqs {
+			logrus.Errorf("  [%d] Action=%s, Index=%s, Type=%s, ID=%s, Data=%+v", i, req.Action, req.Index, req.Type, req.ID, req.Data)
+		}
+		return errors.Errorf("ES bulk operation failed with code %d", resp.Code)
 	}
 
 	return nil

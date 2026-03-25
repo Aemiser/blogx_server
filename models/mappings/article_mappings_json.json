@@ -2,15 +2,22 @@
   "mappings": {
     "properties": {
       "id": {
-        "type": "integer"
+        "type": "long"
       },
       "created_at": {
         "type": "date",
-        "null_value": "null"
+        "null_value": "null",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
       },
       "updated_at": {
         "type": "date",
-        "null_value": "null"
+        "null_value": "null",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+      },
+      "deleted_at": {
+        "type": "date",
+        "null_value": "null",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
       },
       "title": {
         "type": "text",
@@ -20,14 +27,14 @@
           }
         }
       },
-      "abstract": {   
+      "abstract": {
         "type": "text"
       },
       "content": {
         "type": "text"
       },
       "category_id": {
-        "type": "integer"
+        "type": "long"
       },
       "tag_list": {
         "type": "keyword"
@@ -36,19 +43,19 @@
         "type": "keyword"
       },
       "user_id": {
-        "type": "integer"
+        "type": "long"
       },
       "look_count": {
-        "type": "integer"
+        "type": "long"
       },
       "digg_count": {
-        "type": "integer"
+        "type": "long"
       },
       "comment_count": {
-        "type": "integer"
+        "type": "long"
       },
       "collect_count": {
-        "type": "integer"
+        "type": "long"
       },
       "status": {
         "type": "integer"

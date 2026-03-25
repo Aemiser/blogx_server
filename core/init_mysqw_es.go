@@ -9,12 +9,12 @@ import (
 
 func InitMysqlEs() {
 	if global.Config.ES.Addr == "" {
-		logrus.Infof("未配置es")
+		logrus.Infof("未配置 es")
 		return
 	}
 
 	if !global.Config.River.Enable {
-		logrus.Infof("未启用es和mysql的同步")
+		logrus.Infof("未启用 es 和 mysql 的同步")
 		return
 	}
 

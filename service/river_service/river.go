@@ -14,7 +14,6 @@ import (
 	"github.com/siddontang/go-log/log"
 	"github.com/siddontang/go-mysql/canal"
 	"github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
 )
 
 // ErrRuleNotExist is the error if rule is not defined.
@@ -288,10 +287,21 @@ func (r *River) Run() error {
 	go r.syncLoop()
 
 	pos := r.master.Position()
-	// 添加连接测试
-	if err := r.testMySQLConnection(); err != nil {
-		log.Errorf("MySQL connection test failed: %v", err)
-		return errors.Trace(err)
+
+	// 如果没有保存的位置，从 MySQL 获取当前 binlog 位置
+	if pos.Name == "" || pos.Pos == 0 {
+		log.Infof("没有保存的位置信息，从 MySQL 获取当前 binlog 位置")
+		currentPos, err := r.getCurrentBinlogPosition()
+		if err != nil {
+			log.Errorf("获取当前 binlog 位置失败: %v", err)
+			return errors.Trace(err)
+		}
+		pos = currentPos
+		// 保存当前位置
+		if err := r.master.Save(pos); err != nil {
+			log.Errorf("保存 binlog 位置失败: %v", err)
+		}
+		log.Infof("从 MySQL 获取到当前 binlog 位置: %v", pos)
 	}
 
 	log.Infof("准备从 binlog 位置启动：%+v", pos)
@@ -308,6 +318,33 @@ func (r *River) Run() error {
 	}
 
 	return nil
+}
+
+// getCurrentBinlogPosition 从 MySQL 获取当前 binlog 位置
+func (r *River) getCurrentBinlogPosition() (mysql.Position, error) {
+	result, err := r.canal.Execute("SHOW MASTER STATUS")
+	if err != nil {
+		return mysql.Position{}, errors.Trace(err)
+	}
+
+	if result.Resultset == nil || result.Resultset.RowNumber() == 0 {
+		return mysql.Position{}, errors.New("无法获取 binlog 状态")
+	}
+
+	name, err := result.GetString(0, 0)
+	if err != nil {
+		return mysql.Position{}, errors.Trace(err)
+	}
+
+	posStr, err := result.GetString(0, 1)
+	if err != nil {
+		return mysql.Position{}, errors.Trace(err)
+	}
+
+	var pos uint32
+	fmt.Sscanf(posStr, "%d", &pos)
+
+	return mysql.Position{Name: name, Pos: pos}, nil
 }
 
 // Ctx returns the internal context for outside use.
@@ -344,49 +381,4 @@ func buildTable(table string) string {
 		return "." + table
 	}
 	return table
-}
-
-// testMySQLConnection 测试 MySQL 连接
-type dummyHandler struct{}
-
-func (h *dummyHandler) OnRotate(*replication.RotateEvent) error               { return nil }
-func (h *dummyHandler) OnTableChanged(string, string) error                   { return nil }
-func (h *dummyHandler) OnDDL(mysql.Position, *replication.QueryEvent) error   { return nil }
-func (h *dummyHandler) OnXID(mysql.Position) error                            { return nil }
-func (h *dummyHandler) OnRow(*canal.RowsEvent) error                          { return nil }
-func (h *dummyHandler) OnGTID(mysql.GTIDSet) error                            { return nil }
-func (h *dummyHandler) OnPosSynced(mysql.Position, mysql.GTIDSet, bool) error { return nil }
-func (h *dummyHandler) String() string                                        { return "DummyHandler" }
-
-func (r *River) testMySQLConnection() error {
-	log.Infof("Testing MySQL connection to %s", global.Config.DB[0].Addr())
-
-	// 创建一个简单的 canal 实例来测试连接
-	cfg := canal.NewDefaultConfig()
-	db := global.Config.DB[0]
-	cfg.Addr = db.Addr()
-	cfg.User = db.User
-	cfg.Password = db.Password
-	cfg.Charset = "utf8mb4"
-
-	// 只测试连接，不监听任何表
-	cfg.IncludeTableRegex = []string{"^$"} // 匹配空字符串，实际上不会监听任何表
-
-	testCanal, err := canal.NewCanal(cfg)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	defer testCanal.Close()
-
-	testCanal.SetEventHandler(&dummyHandler{})
-
-	// 尝试执行简单查询
-	_, err = testCanal.Execute("SELECT 1")
-	if err != nil {
-		log.Errorf("MySQL query test failed: %v", err)
-		return errors.Trace(err)
-	}
-
-	log.Info("MySQL connection test successful")
-	return nil
 }

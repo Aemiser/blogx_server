@@ -86,13 +86,10 @@ func (m *masterInfo) Position() mysql.Position {
 	m.RLock()
 	defer m.RUnlock()
 
-	// 如果没有有效的位置信息，返回已知的正确位置
+	// 如果没有保存的位置，返回空位置让 canal 从当前 binlog 位置开始
 	if m.Name == "" || m.Pos == 0 {
-		log.Infof("Using default binlog position: mysql-bin.000012:154")
-		return mysql.Position{
-			Name: "mysql-bin.000012",
-			Pos:  154,
-		}
+		log.Infof("No saved binlog position found, will start from current position")
+		return mysql.Position{}
 	}
 
 	return mysql.Position{

@@ -72,7 +72,7 @@ func (r *Rule) Prepare() error {
 
 // CheckFilter checkers whether the field needs to be filtered.
 func (r *Rule) CheckFilter(field string) bool {
-	if r.Filter == nil {
+	if r.Filter == nil || len(r.Filter) == 0 {
 		return true
 	}
 
