@@ -127,8 +127,8 @@ func main() {
 	core.InitLogrus()
 	global.ESClient = core.EsConnect()
 
-	//DocCreate()
-	updata()
+	DocCreate()
+	//updata()
 	//DocFind( )
 	//DocDelete()
 }
