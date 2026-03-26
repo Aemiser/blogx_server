@@ -10,6 +10,7 @@ import (
 	"blogx_server/api/global_notification_api"
 	"blogx_server/api/image_api"
 	"blogx_server/api/log_api"
+	"blogx_server/api/search_api"
 	"blogx_server/api/site_api"
 	"blogx_server/api/site_msg_api"
 	"blogx_server/api/user_api"
@@ -28,6 +29,7 @@ type Api struct {
 	GlobalNotificationApi global_notification_api.GlobalNotificationApi
 	FocusApi              focus_api.FocusApi
 	ChatApi               chat_api.ChatApi
+	SearchApi             search_api.SearchApi
 }
 
 var App = Api{}

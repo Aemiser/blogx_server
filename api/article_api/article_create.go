@@ -22,7 +22,7 @@ type ArticleCreateRequest struct {
 	TagList     ctype.List         `json:"tagList"`
 	Cover       string             `json:"cover"`
 	UserID      string             `json:"userID"`
-	OpenComment bool               `json:"openComment"`
+	OpenComment int8               `json:"openComment"`
 	Status      enum.ArticleStatus `json:"status" binding:"required,oneof=1 2"`
 }
 
