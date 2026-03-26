@@ -69,3 +69,31 @@ func (a *ArticleModel) BeforeDelete(tx *gorm.DB) (err error) {
 		a.ID, tables[0].count, tables[1].count, tables[2].count, tables[3].count, tables[4].count)
 	return nil
 }
+
+func (a *ArticleModel) AfterCreate(tx *gorm.DB) (err error) {
+	// 创建文章之后的钩子函数
+	// 只有发布中的文章会放到全文搜索里面去
+	if a.Status != enum.ArticlePublished {
+		// 创建文章索引
+		return nil
+	}
+
+	textList := MdContentTransformation(a.ID, a.Title, a.Content)
+	err = tx.Create(&textList).Error
+	if err != nil {
+		logrus.Errorf("创建text失败：%v", err)
+		return err
+	}
+	return nil
+}
+
+func (a *ArticleModel) AfterDelete(tx *gorm.DB) (err error) {
+	// 删除之后
+	var textList []TextModel
+	tx.Find(&textList, "article_id = ?", a.ID)
+	if len(textList) > 0 {
+		logrus.Infof("删除全文记录 %d", len(textList))
+		tx.Delete(&textList)
+	}
+	return nil
+}
