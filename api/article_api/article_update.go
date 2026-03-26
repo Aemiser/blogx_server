@@ -97,6 +97,12 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 		res.FailWithMsg("文章更新失败", c)
 		return
 	}
+
+	// 判断文章有没有变化
+	if cr.Title != article.Title || cr.Content != article.Content {
+		// 重新构建全文记录
+
+	}
 	res.SuccessWithMsg("文章更新成功", c)
 
 }

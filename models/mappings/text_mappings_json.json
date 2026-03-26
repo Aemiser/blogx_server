@@ -1,0 +1,38 @@
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long"
+      },
+      "created_at": {
+        "type": "date",
+        "null_value": "null",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+      },
+      "updated_at": {
+        "type": "date",
+        "null_value": "null",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+      },
+      "deleted_at": {
+        "type": "date",
+        "null_value": "null",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+      },
+      "head": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "body": {
+        "type": "text"
+      },
+      "article_id": {
+        "type": "long"
+      }
+    }
+  }
+}

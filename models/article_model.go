@@ -3,6 +3,7 @@ package models
 import (
 	"blogx_server/models/ctype"
 	"blogx_server/models/enum"
+	"blogx_server/service/text_service"
 	_ "embed"
 	"fmt"
 
@@ -78,7 +79,8 @@ func (a *ArticleModel) AfterCreate(tx *gorm.DB) (err error) {
 		return nil
 	}
 
-	textList := MdContentTransformation(a.ID, a.Title, a.Content)
+	textList := text_service.MdContentTransformation(a.ID, a.Title, a.Content)
+
 	err = tx.Create(&textList).Error
 	if err != nil {
 		logrus.Errorf("创建text失败：%v", err)
@@ -95,5 +97,12 @@ func (a *ArticleModel) AfterDelete(tx *gorm.DB) (err error) {
 		logrus.Infof("删除全文记录 %d", len(textList))
 		tx.Delete(&textList)
 	}
+	return nil
+}
+
+func (a *ArticleModel) AfterUpdate(tx *gorm.DB) (err error) {
+	// 把之前的记录给删除
+	a.AfterDelete(tx)
+	a.AfterCreate(tx)
 	return nil
 }

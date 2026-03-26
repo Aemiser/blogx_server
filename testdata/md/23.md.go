@@ -15,7 +15,7 @@ func main() {
 		panic(err)
 	}
 	//MdContentTransformation(1, "这是一个大大的测试内容", string(byteData))
-	list := text_service.MdContentTransformation(models.ArticleModel{
+	list := models.MdContentTransformation(models.ArticleModel{
 		Model:   models.Model{gorm.Model{ID: 1}},
 		Title:   "这是一个大大的测试内容",
 		Content: string(byteData),
