@@ -8,6 +8,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/redis_service/redis_article"
 	"blogx_server/utils/sql"
 	"context"
 	"encoding/json"
@@ -55,6 +56,12 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 		return
 	}
 
+	// 缓存
+	collectMap := redis_article.GetAllCacheCollect()
+	lookMap := redis_article.GetAllCacheLook()
+	diggMap := redis_article.GetAllCacheDigg()
+	commentMap := redis_article.GetAllCacheComment()
+
 	topArticleIDList := getAdminTopArticleIDList()
 	// 服务降级
 	if global.ESClient == nil {
@@ -87,6 +94,11 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 
 		var list = make([]ArticleListResponse, 0)
 		for _, model := range _list {
+			model.Content = ""
+			model.DiggCount = model.DiggCount + diggMap[model.ID]
+			model.CollectCount = model.CollectCount + collectMap[model.ID]
+			model.LookCount = model.LookCount + lookMap[model.ID]
+			model.CommentCount = model.LookCount + commentMap[model.ID]
 			item := ArticleListResponse{
 				ArticleModel: model,
 				AdminTop:     articleTopMap[model.ID],
@@ -200,6 +212,11 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 
 	var list = make([]ArticleListResponse, 0)
 	for _, model := range _list {
+		model.Content = ""
+		model.DiggCount = model.DiggCount + diggMap[model.ID]
+		model.CollectCount = model.CollectCount + collectMap[model.ID]
+		model.LookCount = model.LookCount + lookMap[model.ID]
+		model.CommentCount = model.LookCount + commentMap[model.ID]
 		item := ArticleListResponse{
 			ArticleModel: model,
 			AdminTop:     articleTopMap[model.ID],
