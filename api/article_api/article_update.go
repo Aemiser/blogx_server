@@ -23,7 +23,7 @@ type ArticleUpdateRequest struct {
 	TagList     ctype.List `json:"tagList"`
 	Cover       string     `json:"cover"`
 	UserID      string     `json:"userID"`
-	OpenComment int8       `json:"openComment"`
+	OpenComment bool       `json:"openComment"`
 }
 
 func (ArticleApi) ArticleUpdateView(c *gin.Context) {

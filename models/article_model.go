@@ -25,7 +25,7 @@ type ArticleModel struct {
 	DiggCount    int                `json:"diggCount"`
 	CommentCount int                `json:"commentCount"`
 	CollectCount int                `json:"collectCount"`
-	OpenComment  int8               `json:"openComment"` //开启评论 0:关闭 1:开启
+	OpenComment  bool               `json:"openComment"` //开启评论
 	Status       enum.ArticleStatus `json:"status"`      // 状态 草稿 审核中 已发布
 }
 

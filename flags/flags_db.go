@@ -31,6 +31,7 @@ func FlagDB() {
 		&models.UserFocusModel{},              // 用户粉丝表
 		&models.UserChatAtionModel{},          // 用户聊天操作表
 		&models.ChatModel{},                   // 用户聊天表
+		&models.TextModel{},                   // 用户聊天表
 
 	)
 	if err != nil {
