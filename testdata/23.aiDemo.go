@@ -162,6 +162,6 @@ func main() {
 
 	// 使用 for-range 循环接收流式数据
 	for s := range msgChan {
-		fmt.Print(s) // 使用 Print 而不是 Println，避免换行
+		fmt.Println(s) // 使用 Print 而不是 Println，避免换行
 	}
 }
