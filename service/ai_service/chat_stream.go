@@ -5,8 +5,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 
 	"github.com/sirupsen/logrus"
 )
@@ -54,16 +52,6 @@ func ChatStream(content, promopt string) (msgChan chan string, err error) {
 	if err != nil {
 		logrus.Errorf("请求失败 %s", err)
 		err = fmt.Errorf("AI 服务请求失败：%w", err)
-		close(msgChan)
-		return
-	}
-
-	// 检查 HTTP 状态码
-	if res.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(res.Body)
-		res.Body.Close()
-		logrus.Errorf("AI 服务返回错误状态码：%d, 响应：%s", res.StatusCode, string(body))
-		err = fmt.Errorf("AI 服务错误 (状态码 %d): 服务器繁忙，请稍后再试", res.StatusCode)
 		close(msgChan)
 		return
 	}
