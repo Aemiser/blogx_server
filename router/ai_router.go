@@ -11,5 +11,5 @@ import (
 func AiRouter(r *gin.RouterGroup) {
 	app := api.App.AiApi
 	r.POST("ai/analysis", middlerware.AuthMiddleware, middlerware.BindJsonMiddlerware[ai_api.AIAnalysisRequest], app.AIAnalysisView)
-	r.POST("ai/article", middlerware.AuthMiddleware, middlerware.BindJsonMiddlerware[ai_api.ArticleAiRequest], app.ArticleAiView)
+	r.GET("ai/article", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[ai_api.ArticleAiRequest], app.ArticleAiView)
 }

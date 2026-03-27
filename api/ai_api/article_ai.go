@@ -8,7 +8,6 @@ import (
 	"blogx_server/service/ai_service"
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -17,14 +16,15 @@ import (
 )
 
 type ArticleAiRequest struct {
-	Content string `json:"content" binding:"required"`
+	Content string `form:"content" binding:"required"`
 }
 
 func (AiApi) ArticleAiView(c *gin.Context) {
 	cr := middlerware.GetBind[ArticleAiRequest](c)
 
 	if !global.Config.Ai.Enable {
-		res.FailWithMsg("站点未启用AI服务", c)
+		res.SSEFail("站点未启用AI服务", c)
+		return
 	}
 	query := elastic.NewBoolQuery()
 	query.Must(elastic.NewTermQuery("status", 3)) // 必须是已发布状态
@@ -43,7 +43,7 @@ func (AiApi) ArticleAiView(c *gin.Context) {
 		source, _ := query.Source()
 		byteData, _ := json.Marshal(source)
 		logrus.Errorf("查询失败 %s \n %s", err, string(byteData))
-		res.FailWithMsg("查询失败", c)
+		res.SSEOK("查询失败", c)
 		return
 	}
 
@@ -54,12 +54,11 @@ func (AiApi) ArticleAiView(c *gin.Context) {
 	content := "[" + strings.Join(list, ",") + "]"
 	msgChan, err := ai_service.ChatStream(cr.Content, content)
 	if err != nil {
-		res.FailWithMsg("ai分析失败", c)
+		res.SSEFail("ai分析失败", c)
 		return
 	}
 	for s := range msgChan {
-		fmt.Print(s)
+		res.SSEOK(s, c)
 	}
-	res.SuccessWithData(list, c)
 
 }
