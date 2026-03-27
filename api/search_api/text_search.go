@@ -31,7 +31,6 @@ func (SearchApi) TextSearchView(c *gin.Context) {
 
 	// 服务降级
 	if global.ESClient == nil {
-
 		_list, count, _ := common.ListQuery(models.TextModel{}, common.Options{
 			PageInfo: cr.PageInfo,
 			Likes:    []string{"head", "body"},

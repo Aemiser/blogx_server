@@ -62,6 +62,14 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 	diggMap := redis_article.GetAllCacheDigg()
 	commentMap := redis_article.GetAllCacheComment()
 
+	claims, err := jwts.ParseTokenByGin(c)
+	if err != nil && claims == nil {
+		if cr.Page > 2 || cr.Limit > 10 {
+			res.FailWithMsg("查询更多，请登入", c)
+			return
+		}
+	}
+
 	topArticleIDList := getAdminTopArticleIDList()
 	// 服务降级
 	if global.ESClient == nil {
