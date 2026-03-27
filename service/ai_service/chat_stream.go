@@ -2,6 +2,7 @@ package ai_service
 
 import (
 	"bufio"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -30,14 +31,17 @@ type StreamDate struct {
 	SystemFingerprint string    `json:"system_fingerprint"`
 }
 
-func ChatStream(content string) (msgChan chan string, err error) {
+//go:embed chat_stream.prompt
+var Streamprompt string
+
+func ChatStream(content, promopt string) (msgChan chan string, err error) {
 	msgChan = make(chan string, 10) // 添加缓冲避免阻塞
 	r := Request{
 		Model: "gpt-3.5-turbo",
 		Message: []Message{
 			{
 				Role:    "system",
-				Content: "你是一名叫熊大的客服人工智能助手",
+				Content: Streamprompt + promopt,
 			},
 			{
 				Role:    "user",

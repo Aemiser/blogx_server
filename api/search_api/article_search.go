@@ -183,7 +183,10 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 		Sort(sortKey, false).
 		Do(context.Background())
 	if err != nil {
-		fmt.Println(err)
+		source, _ := query.Source()
+		byteData, _ := json.Marshal(source)
+		logrus.Errorf("查询失败 %s \n %s", err, string(byteData))
+		res.FailWithMsg("查询失败", c)
 		return
 	}
 	count := result.Hits.TotalHits.Value // 总数

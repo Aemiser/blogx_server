@@ -154,7 +154,7 @@ func main() {
 	//msg, err := ai_service.Chat("紧急！apifox被投毒，我已中招，赶紧自查\n发布时间：2026-03-26 （20 小时前）\napifox\n网络安全\n3月4日至3月22日 这期间打开过apifox的，赶紧看看自己有没有中招\n\nApifox 是一款 API 一体化协作平台，其桌面端应用基于 Electron 框架开发，提供 Windows、macOS、Linux 三平台客户端。因未严格启用 sandbox 参数，并暴露了 Node.js 的 API 接口，导致攻击者可通过 JS 控制 Apifox 的终端——三个平台均受影响\n\n简单来说：\n\napifox在打开过程中，会加载：\n\nhxxps://cdn[.]apifox[.]com/www/assets/js/apifox-app-event-tracking.min.js\n该文件正常大小为 34KB，但在 3 月 4 日之后可能会请求到被投毒的版本（77KB）。被投毒的 JS 文件会动态加载 hxxps://apifox[.]it[.]com/public/apifox-event.js（该域名非官方域名），在满足特定条件下加载攻击载荷，采集主机系统环境和敏感信息（SSH 密钥、Git 凭证、命令行历史、进程列表），上报到 hxxps://apifox[.]it[.]com/event/0/log。后续攻击者会控制主机拉取执行后门程序，并尝试发起横向攻击，控制更多有价值目标。\n\n如何自查\n\nwindows用户，去访问 %APPDATA%\\apifox\\Local Storage\\leveldb，去查看全部的二进制文件\n\n如果能看到 rl_mc 或 rl_headers ，那就说明中招了\n\n\n立即停用 Apifox 桌面端应用或者更新最新版本\n轮换所有 SSH 密钥（~/.ssh/ 下的全部密钥对）\n吊销所有 Git Personal Access Token（GitHub、GitLab 等）\n轮换 K8s 集群 OIDC Token 和 kubeconfig\n轮换 npm registry Token\n修改命令行历史中暴露的所有密码、Token 和 API Key\n审查服务器登录日志，检查是否有异常 SSH 登录 last命令\n原文链接：https://rce.moe/2026/03/25/apifox-supply-chain-attack-analysis")
 	//fmt.Println(msg, err)
 
-	msgChan, err := ai_service.ChatStream("你是谁？")
+	msgChan, err := ai_service.ChatStream("给我关于java的文章")
 	if err != nil {
 		fmt.Println("错误:", err)
 		return
@@ -162,6 +162,6 @@ func main() {
 
 	// 使用 for-range 循环接收流式数据
 	for s := range msgChan {
-		fmt.Println(s) // 使用 Print 而不是 Println，避免换行
+		fmt.Print(s) // 使用 Print 而不是 Println，避免换行
 	}
 }
