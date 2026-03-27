@@ -1,6 +1,7 @@
 package api
 
 import (
+	"blogx_server/api/ai_api"
 	"blogx_server/api/article_api"
 	"blogx_server/api/banner_api"
 	"blogx_server/api/captcha_api"
@@ -30,6 +31,7 @@ type Api struct {
 	FocusApi              focus_api.FocusApi
 	ChatApi               chat_api.ChatApi
 	SearchApi             search_api.SearchApi
+	AiApi                 ai_api.AiApi
 }
 
 var App = Api{}
