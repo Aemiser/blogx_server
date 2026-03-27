@@ -28,6 +28,11 @@ func LogMiddleware(c *gin.Context) {
 	log.SetRequest(c)
 	// 存储到gin的上下文中，方便视图层调用
 	c.Set("log", log)
+	if c.Request.URL.Path == "/api/ai/article" {
+		c.Next()
+		log.MiddlewareSave()
+		return
+	}
 	res := &ResponseWriter{
 		ResponseWriter: c.Writer,
 		Head:           make(http.Header),
