@@ -6,6 +6,7 @@ import (
 	"blogx_server/core"
 	"blogx_server/global"
 	"blogx_server/middlerware"
+	"blogx_server/service/redis_service/redis_site"
 	"errors"
 	"fmt"
 	"os"
@@ -39,6 +40,7 @@ func (SiteApi) SiteInfoView(c *gin.Context) {
 	fmt.Println("req:", req)
 	var data any
 	if req.Name == "site" {
+		redis_site.SetFlow()
 		global.Config.Site.About.Version = global.Version
 		data = SiteInfoResponse{
 			QiNiu: QiNiu{
