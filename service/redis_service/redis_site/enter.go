@@ -18,3 +18,7 @@ func GetFlow() int {
 	v, _ := global.Redis.Get(context.Background(), key).Int()
 	return v
 }
+
+func Clean() {
+	global.Redis.Del(context.Background(), key)
+}

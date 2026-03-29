@@ -4,28 +4,26 @@ import (
 	"blogx_server/common/res"
 	"blogx_server/global"
 	"blogx_server/models"
-	"blogx_server/models/enum"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type ArticleDataResponse struct {
+type UserDataResponse struct {
 	GrowthRate int      `json:"growthRate"`
 	GrowthNum  int      `json:"growthNum"`
 	DateList   []string `json:"dateList"`
 	CountList  []int    `json:"countList"`
 }
 
-func (DataApi) ArticleDataView(c *gin.Context) {
+func (DataApi) UserDataView(c *gin.Context) {
 	now := time.Now()
 	before7 := now.AddDate(0, 0, -6)
 	// 查询七天内的文章
-	var articleList []models.ArticleModel
-	global.Db.Find(&articleList, "created_at >=? and created_at <= ? and status = ?",
+	var articleList []models.UserModel
+	global.Db.Find(&articleList, "created_at >=? and created_at <= ?",
 		before7.Format("2006-01-02")+" 00:00:00",
-		now.Format("2006-01-02 15:04:05"),
-		enum.ArticlePublished)
+		now.Format("2006-01-02 15:04:05"))
 
 	var dateMap = map[string]int{}
 
@@ -39,7 +37,7 @@ func (DataApi) ArticleDataView(c *gin.Context) {
 		dateMap[date] = count + 1
 	}
 
-	response := ArticleDataResponse{}
+	response := UserDataResponse{}
 	for i := 0; i < 7; i++ {
 		dateS := before7.AddDate(0, 0, i).Format("2006-01-02")
 		count, _ := dateMap[dateS]
