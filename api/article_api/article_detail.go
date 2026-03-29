@@ -14,16 +14,17 @@ import (
 
 type ArticleDetailResponse struct {
 	models.ArticleModel
-	Username   string `json:"username"`
-	Nickname   string `json:"nickname"`
-	UserAvatar string `json:"useravatar"`
+	Username      string  `json:"username"`
+	Nickname      string  `json:"nickname"`
+	UserAvatar    string  `json:"useravatar"`
+	CategoryTitlt *string `json:"categoryTitlt"`
 }
 
 func (ArticleApi) ArticleDetailView(c *gin.Context) {
 	cr := middlerware.GetBind[models.IDRequest](c)
 
 	var article models.ArticleModel
-	err := global.Db.Take(&article, cr.ID).Error
+	err := global.Db.Preload("UserModel").Preload("Category").Take(&article, cr.ID).Error
 	if err != nil {
 		res.FailWithMsg("文章不存在", c)
 		return
@@ -75,6 +76,8 @@ func (ArticleApi) ArticleDetailView(c *gin.Context) {
 		Nickname:     article.UserModel.Nickname,
 		UserAvatar:   article.UserModel.Avatar,
 	}
-
+	if article.Category != nil {
+		resp.CategoryTitlt = &article.Category.Title
+	}
 	res.SuccessWithData(resp, c)
 }
