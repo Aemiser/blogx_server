@@ -22,6 +22,14 @@ type SiteInfoRequest struct {
 	Name string `json:"name" form:"name" uri:"name"`
 }
 
+type QiNiu struct {
+	Enable bool `json:"enable" `
+}
+type SiteInfoResponse struct {
+	QiNiu QiNiu `json:"qiNiu"`
+	conf.Site
+}
+
 func (SiteApi) SiteInfoView(c *gin.Context) {
 	var req SiteInfoRequest
 	if err := c.ShouldBindUri(&req); err != nil {
@@ -32,7 +40,12 @@ func (SiteApi) SiteInfoView(c *gin.Context) {
 	var data any
 	if req.Name == "site" {
 		global.Config.Site.About.Version = global.Version
-		data = global.Config.Site
+		data = SiteInfoResponse{
+			QiNiu: QiNiu{
+				Enable: global.Config.QiNiu.Enable,
+			},
+			Site: global.Config.Site,
+		}
 		res.SuccessWithData(data, c)
 		return
 	}
