@@ -18,6 +18,8 @@ type ArticleDetailResponse struct {
 	Nickname      string  `json:"nickname"`
 	UserAvatar    string  `json:"useravatar"`
 	CategoryTitlt *string `json:"categoryTitlt"`
+	IsDigg        bool    `json:"isDigg"`
+	IsCollect     bool    `json:"isCollect"`
 }
 
 func (ArticleApi) ArticleDetailView(c *gin.Context) {
@@ -45,8 +47,15 @@ func (ArticleApi) ArticleDetailView(c *gin.Context) {
 		claims = nil
 	}
 
+	var resp = ArticleDetailResponse{
+		ArticleModel: article,
+		Username:     article.UserModel.Username,
+		Nickname:     article.UserModel.Nickname,
+		UserAvatar:   article.UserModel.Avatar,
+	}
+
 	// 如果 claims 为空，说明 token 无效，直接跳过权限判断
-	if claims != nil {
+	if err == nil && claims != nil {
 		switch claims.Claims.Role {
 		case enum.UserRole:
 			// 用户只能看见自己的全部文章，但不能看别人未发布的文章
@@ -59,6 +68,20 @@ func (ArticleApi) ArticleDetailView(c *gin.Context) {
 				}
 			}
 		}
+
+		// 查用户是否收藏了文章，是否点赞了文章
+		var userDiffModel models.ArticleDiggModel
+		err = global.Db.Take(&userDiffModel, "article_id = ? and user_id = ?", article.ID, claims.Claims.UserID).Error
+		if err == nil {
+			resp.IsDigg = true
+		}
+
+		var userCollectModel models.UserArticleCollectModel
+		err = global.Db.Take(&userCollectModel, "article_id = ? and user_id = ?", article.ID, claims.Claims.UserID).Error
+		if err == nil {
+			resp.IsCollect = true
+		}
+
 	}
 
 	collentCount := redis_article.GetArticleCacheCollect(article.ID)
@@ -70,12 +93,7 @@ func (ArticleApi) ArticleDetailView(c *gin.Context) {
 	article.DiggCount = article.DiggCount + diggCount
 	article.CollectCount = article.CollectCount + collentCount
 	article.CommentCount = article.CommentCount + commentCount
-	var resp = ArticleDetailResponse{
-		ArticleModel: article,
-		Username:     article.UserModel.Username,
-		Nickname:     article.UserModel.Nickname,
-		UserAvatar:   article.UserModel.Avatar,
-	}
+
 	if article.Category != nil {
 		resp.CategoryTitlt = &article.Category.Title
 	}
