@@ -1,6 +1,9 @@
 package maps
 
-import "reflect"
+import (
+	"encoding/json"
+	"reflect"
+)
 
 func StructToMap(data interface{}, t string) map[string]interface{} {
 	var mp = make(map[string]interface{})
@@ -18,7 +21,13 @@ func StructToMap(data interface{}, t string) map[string]interface{} {
 		}
 
 		if val.Kind() == reflect.Ptr {
-			mp[tag] = val.Elem().Interface()
+			v1 := val.Elem().Interface()
+			if val.Elem().Kind() == reflect.Slice {
+				byteData, _ := json.Marshal(v1)
+				mp[tag] = string(byteData)
+			} else {
+				mp[tag] = v1
+			}
 			continue
 		}
 		mp[tag] = val.Interface()
