@@ -13,6 +13,7 @@ func Cron() {
 
 	// 凌晨两点同步
 	crontab.AddFunc("* * 2 * * *", SyncArticle)
+	crontab.AddFunc("* 30 2 * * *", SyncUser)
 	crontab.AddFunc("* * 3 * * *", SyncComment)
 	crontab.AddFunc("50 59 23 * * *", SyncSiteFlow)
 	crontab.Start()

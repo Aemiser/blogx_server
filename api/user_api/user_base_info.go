@@ -4,6 +4,7 @@ import (
 	"blogx_server/common/res"
 	"blogx_server/global"
 	"blogx_server/models"
+	"blogx_server/service/redis_service/redis_user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,13 +14,17 @@ type UserBaseInfoResponse struct {
 	Nickname     string `json:"nickname"`
 	Avatar       string `json:"avatar"`
 	CodeAge      uint   `json:"codeAge"`
-	LookCount    uint   `json:"lookCount"`
+	LookCount    int    `json:"lookCount"`
 	LikeCount    uint   `json:"likeCount"`
 	FollowCount  uint   `json:"followCount"`
 	FansCount    uint   `json:"fansCount"`
-	CollectCount uint   `json:"collectCount"`
-	ArticleCount uint   `json:"articleCount"`
+	CollectCount int    `json:"collectCount"`
+	ArticleCount int    `json:"articleCount"`
 	Place        string `json:"place"`
+	OpenCollect  bool   `json:"openCollect"` // 公开我的收藏
+	OpenFollow   bool   `json:"openFollow"`  // 公开我的关注
+	OpenFans     bool   `json:"openFans"`    // 公开我的粉丝
+	HomeStyleID  uint   `json:"homeStyleID"` // 主页样式ID
 }
 
 func (UserApi) UserBaseInfoView(c *gin.Context) {
@@ -31,25 +36,41 @@ func (UserApi) UserBaseInfoView(c *gin.Context) {
 	}
 
 	var userModel models.UserModel
-	err = global.Db.Take(&userModel, req.ID).Error
+	err = global.Db.Preload("UserConfigModel").Preload("ArticleList").Take(&userModel, req.ID).Error
 	if err != nil {
 		res.FailWithMsg("用户不存在", c)
 		return
 	}
 
 	data := UserBaseInfoResponse{
-		id:           userModel.ID,
-		Nickname:     userModel.Nickname,
-		Avatar:       userModel.Avatar,
-		CodeAge:      userModel.GetCodeAge(),
-		LookCount:    1, // TODO:做完文章浏览关系回来写
-		LikeCount:    1,
-		FollowCount:  1, // TODO:做完好友关系回来写
-		FansCount:    1,
-		CollectCount: 1,
-		ArticleCount: 1,
+		id:        userModel.ID,
+		Nickname:  userModel.Nickname,
+		Avatar:    userModel.Avatar,
+		CodeAge:   userModel.GetCodeAge(),
+		LookCount: userModel.UserConfigModel.LookCount + redis_user.GetUserCacheLook(req.ID),
+		//LikeCount:    1, //TODO 获取用户点赞数
+		FollowCount: 0,
+		FansCount:   0,
+		//CollectCount: 1, //TODO 获取用户收藏数
+		ArticleCount: len(userModel.ArticleList),
 		Place:        userModel.Addr,
+		OpenCollect:  userModel.UserConfigModel.OpenCollect,
+		OpenFollow:   userModel.UserConfigModel.OpenFollow,
+		OpenFans:     userModel.UserConfigModel.OpenFans,
+		HomeStyleID:  userModel.UserConfigModel.HomeStyleID,
 	}
+
+	var fousList []models.UserFocusModel
+	global.Db.Find(&fousList, "focus_user_iD = ? or user_id", req.ID, req.ID)
+	for _, model := range fousList {
+		if model.UserID == req.ID {
+			data.FollowCount++
+		} else {
+			data.FansCount++
+		}
+	}
+
+	redis_user.SetCacheLook(req.ID, true)
 	res.SuccessWithData(data, c)
 
 }
