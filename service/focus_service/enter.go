@@ -31,7 +31,7 @@ func CalcUserRelationship(A, B uint) relationship_enum.Relation {
 func CalcUserPatchRelationship(A uint, BList []uint) (m map[uint]relationship_enum.Relation) {
 	var userFocusList []models.UserFocusModel
 	global.Db.Find(&userFocusList,
-		"(user_id = ? OR focus_user_id in ?) or (focus_user_id = ? OR  user_id in  ?)",
+		"(user_id = ? AND focus_user_id in ?) or (focus_user_id = ? AND  user_id in  ?)",
 		A, BList, A, BList)
 
 	m = make(map[uint]relationship_enum.Relation)
