@@ -22,6 +22,7 @@ type UserDetailResponse struct {
 	Email          string                  `gorm:"size:256" json:"email"`
 	RegisterSource enum.RegisterSourceType `json:"registerSource"` //注册来源
 	CodeAge        uint                    `json:"codeAge"`        //码龄
+	Role           enum.RoleType           `json:"role"`
 	models.UserConfigModel
 }
 
@@ -45,6 +46,7 @@ func (UserApi) UserDetailView(c *gin.Context) {
 		Email:          userModel.Email,
 		RegisterSource: userModel.RegisterSource,
 		CodeAge:        userModel.GetCodeAge(),
+		Role:           userModel.Role,
 	}
 
 	if userModel.UserConfigModel != nil {

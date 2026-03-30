@@ -5,6 +5,7 @@ import (
 	"blogx_server/common/res"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/models/enum"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,9 +24,10 @@ type UserListResponse struct {
 	ArticleCount int    `json:"articleCount"` // 发文数
 	//FansCount     int       `json:"fansCount"`     // 粉丝数
 	//FocusCount    int       `json:"focusCount"`    // 关注数
-	IndexCount    int       `json:"indexCount"`    // 主页访问数
-	CreatedAt     time.Time `json:"createdAt"`     // 注册时间
-	LastLoginDate time.Time `json:"lastLoginDate"` // 最后登录时间
+	IndexCount    int           `json:"indexCount"`    // 主页访问数
+	CreatedAt     time.Time     `json:"createdAt"`     // 注册时间
+	LastLoginDate time.Time     `json:"lastLoginDate"` // 最后登录时间
+	Role          enum.RoleType `json:"role"`
 }
 
 func (UserApi) UserListView(c *gin.Context) {
@@ -48,6 +50,7 @@ func (UserApi) UserListView(c *gin.Context) {
 			Addr:         model.Addr,
 			ArticleCount: len(model.ArticleList),
 			IndexCount:   1000,
+			Role:         model.Role,
 		}
 
 		if len(model.LoginList) > 0 {
