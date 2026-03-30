@@ -22,13 +22,13 @@ type GrowthDataResponse struct {
 	CountList  []int    `json:"countList"`
 }
 
+type Table struct {
+	Date  string `gorm:"column:date"`
+	Count int    `gorm:"column:count"`
+}
+
 func (DataApi) GrowthDataView(c *gin.Context) {
 	cr := middlerware.GetBind[GrowthDataRequest](c)
-
-	type Table struct {
-		Date  string `gorm:"column:date"`
-		Count int    `gorm:"column:count"`
-	}
 
 	var dataList []Table
 
@@ -63,7 +63,7 @@ func (DataApi) GrowthDataView(c *gin.Context) {
 		dateMap[date] = model.Count
 	}
 
-	response := UserDataResponse{}
+	response := GrowthDataResponse{}
 	for i := 0; i < 7; i++ {
 		dateS := before7.AddDate(0, 0, i).Format("2006-01-02")
 		count, _ := dateMap[dateS]
