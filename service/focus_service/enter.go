@@ -4,14 +4,16 @@ import (
 	"blogx_server/global"
 	"blogx_server/models"
 	"blogx_server/models/enum/relationship_enum"
+	"fmt"
 )
 
 func CalcUserRelationship(A, B uint) relationship_enum.Relation {
 	var userFocusList []models.UserFocusModel
 	global.Db.Find(&userFocusList,
-		"(user_id = ? OR focus_user_id = ?) or (focus_user_id = ? OR  user_id= ?)",
+		"(user_id = ? and focus_user_id = ?) or (focus_user_id = ? and  user_id= ?)",
 		A, B, A, B)
-
+	fmt.Println(userFocusList)
+	fmt.Println(len(userFocusList))
 	if len(userFocusList) == 2 {
 		return relationship_enum.RelationFriends
 	}
