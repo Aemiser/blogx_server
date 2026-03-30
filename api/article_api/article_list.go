@@ -94,6 +94,13 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 			return
 		}
 	}
+	query := global.Db.Where("")
+	if cr.CollectID != 0 {
+		var articleIDList []uint
+		global.Db.Model(models.UserArticleCollectModel{}).Where("collect_id = ?", cr.CollectID).Select("article_id").Scan(&articleIDList)
+
+		query.Where("id in ?", articleIDList)
+	}
 
 	// 对于类型2,3而言存在order判断
 	if cr.Order != "" {
@@ -126,6 +133,7 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		Likes:        []string{"title"},
 		PageInfo:     cr.PageInfo,
 		DefaultOrder: "created_at desc",
+		Where:        query,
 		Preloads:     []string{"Category", "UserModel"},
 	}
 
