@@ -69,14 +69,16 @@ func (ArticleApi) CollectCreateView(c *gin.Context) {
 
 type CollectListRequest struct {
 	common.PageInfo
-	UserID uint `form:"UserID"`
-	Type   int8 `form:"type" binding:"required,oneof=1 2 3 "` // 1查自己 2查别人 3后台
+	UserID    uint `form:"UserID"`
+	Type      int8 `form:"type" binding:"required,oneof=1 2 3 "` // 1查自己 2查别人 3后台
+	ArticleID uint `form:"articleID"`
 }
 type CollectListResponse struct {
 	models.CollectModel
 	ArticleCount int    `json:"ArticleCount"`
 	Nickname     string `json:"nickname,omitempty"`
 	Avatar       string `json:"avatar,omitempty"`
+	ArticlceUse  bool   `json:"articlceUse"`
 }
 
 func (ArticleApi) CollectListView(c *gin.Context) {
@@ -126,11 +128,18 @@ func (ArticleApi) CollectListView(c *gin.Context) {
 
 	var list = make([]CollectListResponse, 0)
 	for _, i2 := range _list {
-		list = append(list, CollectListResponse{
+		item := CollectListResponse{
 			CollectModel: i2,
 			ArticleCount: len(i2.ArticleList),
 			Nickname:     i2.UserModel.Nickname,
-			Avatar:       i2.UserModel.Avatar})
+			Avatar:       i2.UserModel.Avatar}
+		for _, model := range i2.ArticleList {
+			if model.ID == cr.ArticleID {
+				item.ArticlceUse = true
+				break
+			}
+		}
+		list = append(list)
 	}
 	res.SuccessWithList(list, count, c)
 
