@@ -24,6 +24,7 @@ type UserDetailResponse struct {
 	CodeAge        uint                    `json:"codeAge"`        //码龄
 	Role           enum.RoleType           `json:"role"`
 	models.UserConfigModel
+	UserPassword bool `json:"userPassword"`
 }
 
 func (UserApi) UserDetailView(c *gin.Context) {
@@ -47,6 +48,9 @@ func (UserApi) UserDetailView(c *gin.Context) {
 		RegisterSource: userModel.RegisterSource,
 		CodeAge:        userModel.GetCodeAge(),
 		Role:           userModel.Role,
+	}
+	if userModel.Password != "" {
+		data.UserPassword = true
 	}
 
 	if userModel.UserConfigModel != nil {
