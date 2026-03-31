@@ -113,16 +113,25 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 	return
 }
 
+type ArticleCollectRemoveRequest struct {
+	CollectID     uint   `json:"collectID" binding:"required"`
+	ArticleIDList []uint `json:"IDList" binding:"required"`
+}
+
 func (ArticleApi) ArticleCollectRemoveView(c *gin.Context) {
-	cr := middlerware.GetBind[models.IDListRequest](c)
+	cr := middlerware.GetBind[ArticleCollectRemoveRequest](c)
 
 	claims := jwts.GetClaimsByGin(c)
 
 	var userCollectList []models.UserArticleCollectModel
-	global.Db.Find(&userCollectList, "id in ? and user_id = ?", cr.IDList, claims.Claims.UserID)
+	global.Db.Find(&userCollectList, "collect_id = ? and id in ? and user_id = ?", cr.CollectID, cr.ArticleIDList, claims.Claims.UserID)
 
 	if len(userCollectList) > 0 {
 		global.Db.Delete(&userCollectList)
+		for _, model := range userCollectList {
+			redis_article.SetCacheCollect(model.ID, false)
+
+		}
 	}
 
 	res.SuccessWithMsgf(c, "批量删除文章共 %d 条", len(userCollectList))
