@@ -3,6 +3,7 @@ package router
 import (
 	"blogx_server/api"
 	"blogx_server/api/article_api"
+	"blogx_server/common"
 	"blogx_server/middlerware"
 	"blogx_server/models"
 
@@ -38,5 +39,7 @@ func ArticleRouter(r *gin.RouterGroup) {
 
 	r.GET("category/options", middlerware.AuthMiddleware, app.CategoryOptionsView)
 	r.GET("article/tag/options", middlerware.AuthMiddleware, app.ArticleTagListView)
+
+	r.GET("article/auth_recommend", middlerware.BindQueryMiddlerware[common.PageInfo], app.ArticleRecommentView)
 
 }
