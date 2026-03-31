@@ -37,6 +37,30 @@ func (SearchApi) TagAggView(c *gin.Context) {
 
 	var list = make([]TagAggResponse, 0)
 	if global.ESClient == nil {
+		var articleList []models.ArticleModel
+		global.Db.Find(&articleList, "tag_list <> ''")
+
+		var tagMap = map[string]int{}
+		for _, model := range articleList {
+			for _, tag := range model.TagList {
+				count, ok := tagMap[tag]
+				if !ok {
+					tagMap[tag] = 1
+					continue
+				}
+				tagMap[tag] = count + 1
+			}
+		}
+		for tag, count := range tagMap {
+			list = append(list, TagAggResponse{
+				Tag:          tag,
+				ArticleCount: count,
+			})
+		}
+		if cr.Limit >= len(list) {
+			cr.Limit = len(list)
+		}
+		res.SuccessWithList(list[0:cr.Limit], len(list), c)
 		return
 	}
 
