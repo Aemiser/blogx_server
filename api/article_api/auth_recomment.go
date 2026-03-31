@@ -20,7 +20,7 @@ type AuthRecommentResponse struct {
 	UserAbstract string `json:"userAbstract"`
 }
 
-func (ArticleApi) ArticleRecommentView(c *gin.Context) {
+func (ArticleApi) AuthRecommentView(c *gin.Context) {
 	cr := middlerware.GetBind[common.PageInfo](c)
 	var count int
 	var userIDList []uint

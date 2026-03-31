@@ -40,6 +40,7 @@ func ArticleRouter(r *gin.RouterGroup) {
 	r.GET("category/options", middlerware.AuthMiddleware, app.CategoryOptionsView)
 	r.GET("article/tag/options", middlerware.AuthMiddleware, app.ArticleTagListView)
 
-	r.GET("article/auth_recommend", middlerware.BindQueryMiddlerware[common.PageInfo], app.ArticleRecommentView)
+	r.GET("article/auth_recommend", middlerware.BindQueryMiddlerware[common.PageInfo], app.AuthRecommentView)
+	r.GET("article/article_recommend", middlerware.BindQueryMiddlerware[common.PageInfo], app.ArticleRecommentView)
 
 }
