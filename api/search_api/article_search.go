@@ -132,7 +132,6 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 	}
 
 	// 把管理员置顶的文章查出来
-
 	var articleTopMap = map[uint]bool{}
 	if len(topArticleIDList) > 0 {
 		var topArticleIDListAny []interface{}
@@ -146,7 +145,7 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 	}
 
 	if cr.Type == 0 { // 推荐
-		claims, err := jwts.ParseTokenByGin(c)
+		claims, err = jwts.ParseTokenByGin(c)
 		if err == nil && claims != nil {
 			// 用户登录了
 			// 查用户感兴趣的分类
@@ -194,14 +193,12 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 	fmt.Printf("总数：%d, 当前页偏移：%d, 每页大小：%d, ES 返回的 Hits 数量：%d\n",
 		count, cr.GetOffset(), cr.GetLimit(), len(result.Hits.Hits))
 	for _, hit := range result.Hits.Hits {
-		fmt.Println(string(hit.Source))
 		var art ArticleBaseInfo
 		err = json.Unmarshal(hit.Source, &art)
 		if err != nil {
 			logrus.Warnf("解析失败: %s %s ", err, string(hit.Source))
 			continue
 		}
-		fmt.Println(hit.Highlight["title"])
 		if len(hit.Highlight["title"]) > 0 {
 			art.Title = hit.Highlight["title"][0]
 		}
@@ -213,7 +210,6 @@ func (SearchApi) ArticleSearchView(c *gin.Context) {
 		searchArticleMap[art.Id] = art
 		articleIDList = append(articleIDList, art.Id)
 	}
-	fmt.Println(articleIDList)
 	where := global.Db.Where("id in ?", articleIDList)
 	_list, _, _ := common.ListQuery(models.ArticleModel{}, common.Options{
 		Where:        where,

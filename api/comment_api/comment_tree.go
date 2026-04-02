@@ -11,6 +11,7 @@ import (
 	"blogx_server/service/comment_service"
 	"blogx_server/service/focus_service"
 	"blogx_server/utils"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +25,7 @@ func (CommentApi) CommentTreeView(c *gin.Context) {
 		res.FailWithMsg("文章不存在", c)
 		return
 	}
-
+	fmt.Println("articleID", article.ID)
 	var userRelationMap = map[uint]relationship_enum.Relation{}
 	var userDiggCommentMap = map[uint]bool{}
 	claims, err := jwts.ParseTokenByGin(c)

@@ -7,7 +7,6 @@ import (
 	"blogx_server/models"
 	"blogx_server/models/enum"
 	"blogx_server/utils/maps"
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -35,9 +34,6 @@ func (UserApi) UserInfoUpdate(c *gin.Context) {
 
 	userMap := maps.StructToMap(req, "s-u")
 	userConfMap := maps.StructToMap(req, "s-u-c")
-
-	fmt.Println(userMap)
-	fmt.Println(userConfMap)
 
 	claims := jwts.GetClaimsByGin(c)
 	if len(userMap) > 0 {

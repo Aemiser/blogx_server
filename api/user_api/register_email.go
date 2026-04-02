@@ -8,6 +8,7 @@ import (
 	"blogx_server/models/enum"
 	"blogx_server/service/user_service"
 	"blogx_server/utils"
+	"blogx_server/utils/email_store"
 	"blogx_server/utils/pwd"
 	"fmt"
 
@@ -34,8 +35,13 @@ func (UserApi) RegisterEmail(c *gin.Context) {
 		return
 	}
 
-	_email, _ := c.Get("email")
-	email := _email.(string)
+	// 验证邮箱验证码并获取邮箱地址
+	info, ok := email_store.Verify(req.EmailID, req.Code)
+	if !ok {
+		res.FailWithMsg("邮箱验证码错误", c)
+		return
+	}
+	email := info.Email
 
 	uname := fmt.Sprintf("b_%s", utils.GetRandomInDigital(4))
 	unickname := fmt.Sprintf("邮箱用户%s", uname)

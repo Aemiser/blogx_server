@@ -90,7 +90,7 @@ func (BannerApi) BannerUpdateView(c *gin.Context) {
 
 type BannerListRequest struct {
 	common.PageInfo
-	Show bool `json:"show"`
+	Show bool `form:"show"`
 }
 
 func (BannerApi) BannerListView(c *gin.Context) {

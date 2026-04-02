@@ -6,7 +6,6 @@ import (
 	"blogx_server/global"
 	"blogx_server/models"
 	"blogx_server/models/enum"
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +28,6 @@ type UserDetailResponse struct {
 
 func (UserApi) UserDetailView(c *gin.Context) {
 	claims := jwts.GetClaimsByGin(c)
-	fmt.Println("claims:", claims)
 	var userModel models.UserModel
 	err := global.Db.Preload("UserConfigModel").Take(&userModel, claims.Claims.UserID).Error
 	if err != nil {

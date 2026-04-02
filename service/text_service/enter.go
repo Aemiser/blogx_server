@@ -1,7 +1,6 @@
 package text_service
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -17,31 +16,26 @@ func MdContentTransformation(id uint, title, content string) (list []TextModel) 
 	var bodyList []string
 	var body string
 	var flag bool
+	// 先添加文章标题
 	headList = append(headList, title)
 	for _, line := range lines {
 		if strings.HasPrefix(line, "```") {
 			flag = !flag
 		}
 		if !flag && strings.HasPrefix(line, "#") {
-			// 标题行
+			// 遇到 Markdown 标题：保存之前累积的正文，然后添加新标题
+			bodyList = append(bodyList, getBody(body))
 			headList = append(headList, getHead(line))
-			bodyList = append(bodyList, getBody(line))
 			body = ""
 			continue
 		}
 		body += line
 	}
 
-	if body != "" {
-		bodyList = append(bodyList, getBody(body))
-	}
+	// 最后一段正文添加到 bodyList，如果为空则添加空字符串
+	bodyList = append(bodyList, getBody(body))
 
-	if len(headList) != len(bodyList) {
-		fmt.Println("headList与bodyList长度不一致")
-		fmt.Printf("%q  %d\n", headList, len(headList))
-		fmt.Printf("%q  %d\n", bodyList, len(bodyList))
-	}
-
+	// 确保两个列表长度一致
 	for i := 0; i < len(headList); i++ {
 		list = append(list, TextModel{
 			ArticleID: id,

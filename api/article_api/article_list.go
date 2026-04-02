@@ -96,9 +96,10 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 	}
 	query := global.Db.Where("")
 	if cr.CollectID != 0 {
+		fmt.Println("收藏夹ID", cr.CollectID)
 		var articleIDList []uint
 		global.Db.Model(models.UserArticleCollectModel{}).Where("collect_id = ?", cr.CollectID).Select("article_id").Scan(&articleIDList)
-
+		fmt.Println("收藏夹IDList", articleIDList)
 		query.Where("id in ?", articleIDList)
 	}
 
@@ -135,6 +136,7 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		DefaultOrder: "created_at desc",
 		Where:        query,
 		Preloads:     []string{"Category", "UserModel"},
+		Debug:        true,
 	}
 
 	if len(topArticleIDList) > 0 {
@@ -148,7 +150,6 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		CategoryID: cr.CategoryID,
 		Status:     cr.Status,
 	}, option)
-
 	// 响应数据封装
 	var list = make([]ArticleListResponse, 0)
 	collectMap := redis_article.GetAllCacheCollect()

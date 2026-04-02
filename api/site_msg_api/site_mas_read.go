@@ -12,8 +12,8 @@ import (
 )
 
 type SiteMsgReadRequest struct {
-	ID uint `json:"id"`
-	T  int8 `json:"t"`
+	ID uint `json:"id"` // 消息id
+	T  int8 `json:"t"`  // 消息类型
 }
 
 func (SiteMsgApi) SiteMsgReadView(c *gin.Context) {

@@ -151,7 +151,7 @@ func (FocusApi) FocusUserListApi(c *gin.Context) {
 	query := global.Db.Where("")
 	if cr.Key != "" {
 		// 模糊匹配用户
-		var userIDList []models.UserModel
+		var userIDList []uint
 		global.Db.Model(models.UserModel{}).Where("nickname like ?", fmt.Sprintf("%%%s%%", cr.Key)).
 			Select("id").Scan(&userIDList)
 
@@ -219,7 +219,7 @@ func (FocusApi) FansUserListApi(c *gin.Context) {
 		FocusUserID: cr.UserID,
 	}, common.Options{
 		PageInfo: cr.PageInfo,
-		Preloads: []string{"FocusUserModel"}})
+		Preloads: []string{"UserModel"}})
 
 	var list = make([]FansUserListResponse, 0)
 	for _, model := range _list {

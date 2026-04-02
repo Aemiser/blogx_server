@@ -56,6 +56,7 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 		res.FailWithMsg("更新的文章必须是自己的", c)
 		return
 	}
+
 	// 判断分类id是不是自己创建的
 	var category models.CategoryModel
 	if cr.CategoryID != nil {
@@ -92,7 +93,7 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 		mps["status"] = enum.ArticleExamine
 	}
 	// 更新文章
-	err = global.Db.Model(article).Updates(mps).Error
+	err = global.Db.Model(&article).Updates(mps).Error
 	if err != nil {
 		res.FailWithMsg("文章更新失败", c)
 		return

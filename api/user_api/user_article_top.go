@@ -7,6 +7,7 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"fmt"
 
 	"errors"
 
@@ -17,7 +18,7 @@ import (
 type UserArticleTopRequest struct {
 	UserID    uint `json:"userID" `
 	ArticleID uint `json:"articleID" binding:"required"`
-	Type      int8 `json:"type" binding:"required,oneof=1 2"`
+	Type      int8 `json:"type" binding:"required,oneof=1 2"` // 1 用户置顶 2 管理员置顶
 }
 
 func (UserApi) UserArticleTopView(c *gin.Context) {
@@ -38,6 +39,8 @@ func (UserApi) UserArticleTopView(c *gin.Context) {
 		// 用户置顶文章
 		// 用户只能置顶自己的文章
 		if model.UserID != userID {
+			fmt.Println(model.UserID)
+			fmt.Println(userID)
 			res.FailWithMsg("无权限", c)
 			return
 		}
@@ -85,17 +88,22 @@ func (UserApi) UserArticleTopView(c *gin.Context) {
 		}
 		var userTopArticle models.UserTopArticleModel
 		err = global.Db.Unscoped().Where("user_id = ? and article_id = ?", userID, cr.ArticleID).First(&userTopArticle).Error
-		if err != nil && errors.Is(err, gorm.ErrRecordNotFound) { // 查不到就置顶
+		if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+			// 之前没有置顶记录，创建新的
 			global.Db.Create(&models.UserTopArticleModel{
 				UserID:    userID,
 				ArticleID: cr.ArticleID,
 			})
 			res.SuccessWithMsg("置顶文章成功", c)
-			return
+		} else if userTopArticle.DeletedAt.Valid {
+			// 有已软删除的记录，恢复它
+			userTopArticle.DeletedAt = gorm.DeletedAt{}
+			global.Db.Save(&userTopArticle)
+			res.SuccessWithMsg("置顶文章成功", c)
+		} else {
+			// 有未删除的记录，取消置顶
+			global.Db.Delete(&userTopArticle)
+			res.SuccessWithMsg("取消置顶成功", c)
 		}
-
-		// 查到了
-		global.Db.Delete(&userTopArticle)
-		res.FailWithMsg("取消置顶成功", c)
 	}
 }

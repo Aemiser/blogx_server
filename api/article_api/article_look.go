@@ -9,6 +9,7 @@ import (
 	"blogx_server/models"
 	"blogx_server/models/enum"
 	"blogx_server/service/redis_service/redis_article"
+	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -104,7 +105,7 @@ func (ArticleApi) ArticleLookListView(c *gin.Context) {
 		PageInfo: cr.PageInfo,
 		Preloads: []string{"UserModel", "ArticleModel"},
 	})
-
+	fmt.Println(_list)
 	var list = make([]ArticleLookListResponse, 0)
 	for _, model := range _list {
 		list = append(list, ArticleLookListResponse{

@@ -115,7 +115,7 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 
 type ArticleCollectRemoveRequest struct {
 	CollectID     uint   `json:"collectID" binding:"required"`
-	ArticleIDList []uint `json:"IDList" binding:"required"`
+	ArticleIDList []uint `json:"articleIDList" binding:"required"`
 }
 
 func (ArticleApi) ArticleCollectRemoveView(c *gin.Context) {
@@ -124,7 +124,7 @@ func (ArticleApi) ArticleCollectRemoveView(c *gin.Context) {
 	claims := jwts.GetClaimsByGin(c)
 
 	var userCollectList []models.UserArticleCollectModel
-	global.Db.Find(&userCollectList, "collect_id = ? and id in ? and user_id = ?", cr.CollectID, cr.ArticleIDList, claims.Claims.UserID)
+	global.Db.Find(&userCollectList, "collect_id = ? and article_id in ? and user_id = ?", cr.CollectID, cr.ArticleIDList, claims.Claims.UserID)
 
 	if len(userCollectList) > 0 {
 		global.Db.Delete(&userCollectList)

@@ -54,10 +54,10 @@ type UserConfigModel struct {
 	UserID             uint       `gorm:"primarykey;unique" json:"userID"`
 	UserModel          UserModel  `gorm:"foreignKey:UserID" json:"-"`
 	LikeTags           []string   `gorm:"type:longtext;serializer:json" json:"likeTags"`
-	UpdataUsernameDate *time.Time `json:"updataUsernameDate"` // 上次修改用户名的时间
-	OpenCollect        bool       `json:"openCollect"`        // 公开我的收藏
-	OpenFollow         bool       `json:"openFollow"`         // 公开我的关注
-	OpenFans           bool       `json:"openFans"`           // 公开我的粉丝
-	HomeStyleID        uint       `json:"homeStyleID"`        // 主页样式ID
-	LookCount          int        `json:"lookCount"`          // 主页的访问接口
+	UpdataUsernameDate *time.Time `json:"updataUsernameDate"`                 // 上次修改用户名的时间
+	OpenCollect        bool       `json:"openCollect"`                        // 公开我的收藏
+	OpenFollow         bool       `json:"openFollow"`                         // 公开我的关注
+	OpenFans           bool       `json:"openFans"`                           // 公开我的粉丝
+	HomeStyleID        uint       `json:"homeStyleID"`                        // 主页样式 ID
+	LookCount          int        `gorm:"column:look_count" json:"lookCount"` // 主页的访问次数
 }

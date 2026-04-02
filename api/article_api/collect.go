@@ -139,7 +139,7 @@ func (ArticleApi) CollectListView(c *gin.Context) {
 				break
 			}
 		}
-		list = append(list)
+		list = append(list, item)
 	}
 	res.SuccessWithList(list, count, c)
 
