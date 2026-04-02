@@ -12,8 +12,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//go:embed chat.prompt
-var prompt string
+//go:embed chat.analysisprompt
+var analysisPrompt string
+
+//go:embed chat.importprompt
+var importPrompt string
 
 const (
 	bashurl = "https://api.chatanywhere.tech/v1/chat/completions"
@@ -81,7 +84,7 @@ func bashRequest(r Request) (res *http.Response, err error) {
 	return
 }
 
-func Chat(content string) (msg string, err error) {
+func chat(content string, prompt string) (msg string, err error) {
 	r := Request{
 		Model: "gpt-3.5-turbo",
 		Message: []Message{
@@ -129,4 +132,13 @@ func Chat(content string) (msg string, err error) {
 	//fmt.Println(resp)
 	msg = resp.Choices[0].Message.Content
 	return
+}
+
+func AnalysisChat(content string) (msg string, err error) {
+	return chat(content, analysisPrompt)
+}
+
+func ImportChat(content string) (msg string, err error) {
+	return chat(content, importPrompt)
+
 }

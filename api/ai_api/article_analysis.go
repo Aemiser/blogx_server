@@ -30,7 +30,7 @@ func (AiApi) AIAnalysisView(c *gin.Context) {
 		return
 	}
 
-	msg, err := ai_service.Chat(cr.Content)
+	msg, err := ai_service.AnalysisChat(cr.Content)
 	if err != nil {
 		logrus.Errorf("AI分析失败: %s %s", err, cr.Content)
 		res.FailWithMsg("AI分析失败", c)
