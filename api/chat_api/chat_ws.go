@@ -46,14 +46,12 @@ type ChatResponse struct {
 }
 
 func (ChatApi) ChatView(c *gin.Context) {
-	// 用户认证
 	claims, err := jwts.ParseTokenByGin(c)
 	if err != nil || claims == nil {
-		res.FailWithMsg("请登录", c)
+		res.FailWithCode(res.SysUnauthorized, c)
 		return
 	}
 
-	// 服务升级
 	conn, err := UP.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		logrus.Errorf("ws服务升级失败：%v", err)
@@ -83,10 +81,9 @@ func (ChatApi) ChatView(c *gin.Context) {
 	fmt.Println("服务开启:", OnlineMap)
 
 	for {
-		// 消息类型，消息，错误
 		_, p, err := conn.ReadMessage()
 		if err != nil {
-			fmt.Println(err) // websocket: close 1005 (no status) :客户端断开
+			fmt.Println(err)
 			if err == io.EOF {
 				fmt.Println("客户端断开")
 			}
@@ -100,41 +97,34 @@ func (ChatApi) ChatView(c *gin.Context) {
 			continue
 
 		}
-		// 判断接受人在不在
 		var revUser models.UserModel
 		err1 := global.Db.Take(&revUser, req.RevUserID).Error
 		if err1 != nil {
-			res.SendConnFailWithMsg("接受人不存在", conn)
+			res.SendConnFailWithMsg(res.ChatNotFound.String(), conn)
 			continue
 		}
 
 		switch req.MsgType {
 		case chat_msg_type.TextMsgType:
 			if req.Msg.ContentMsg == nil || req.Msg.ContentMsg.Content == "" {
-				res.SendConnFailWithMsg("文本消息为空", conn)
+				res.SendConnFailWithMsg(res.ChatTextMsgEmpty.String(), conn)
 				continue
 			}
 		case chat_msg_type.ImageMsgType:
 			if req.Msg.ImagetMsg == nil || req.Msg.ImagetMsg.Src == "" {
-				res.SendConnFailWithMsg("图片消息为空", conn)
+				res.SendConnFailWithMsg(res.ChatImageMsgEmpty.String(), conn)
 				continue
 			}
 		case chat_msg_type.MarkdownMsgType:
 			if req.Msg.MarkdownMsg == nil || req.Msg.MarkdownMsg.Content == "" {
-				res.SendConnFailWithMsg("markdown消息为空", conn)
+				res.SendConnFailWithMsg(res.ChatMarkdownMsgEmpty.String(), conn)
 				continue
 			}
-			// 对markdown消息过滤
 			req.Msg.MarkdownMsg.Content = xss.Filter(req.Msg.MarkdownMsg.Content)
 		default:
-			res.SendConnFailWithMsg("消息类型错误", conn)
+			res.SendConnFailWithMsg(res.ChatMsgTypeError.String(), conn)
 			continue
 		}
-
-		// 判断你与对方的好友关系
-		// 好友就能每天聊
-		// 已关注和粉丝，如果对方没有回复你，那么每天只能聊一次，对方没有回你，只能发一条消息
-		// 陌生人，如果对方开了陌生人私信，那么就能聊
 
 		relation := focus_service.CalcUserRelationship(userID, req.RevUserID)
 		fmt.Printf("用户%d %d关系为：%d", userID, req.RevUserID, relation)
@@ -143,11 +133,11 @@ func (ChatApi) ChatView(c *gin.Context) {
 			var revUserMsgConf models.UserMessageConfModel
 			err1 = global.Db.Take(&revUserMsgConf, "user_id= ?", revUser.ID).Error
 			if err1 != nil {
-				res.SendConnFailWithMsg("接收人隐私设置不存在", conn)
+				res.SendConnFailWithMsg(res.ChatPrivacyNotExist.String(), conn)
 				continue
 			}
 			if !revUserMsgConf.OpenPrivateChat {
-				res.SendConnFailWithMsg("对方未开启陌生人消息", conn)
+				res.SendConnFailWithMsg(res.ChatStrangerClosed.String(), conn)
 				continue
 			}
 
@@ -155,18 +145,16 @@ func (ChatApi) ChatView(c *gin.Context) {
 			global.Db.Model(models.ChatModel{}).Where(" seed_user_id = ? and rev_user_id = ?",
 				userID, req.RevUserID).Count(&sendChatCount)
 
-			// 我发的
 			if sendChatCount >= 1 {
-				res.SendConnFailInChatStrangerWithMsg("陌生人只能发送一条消息", conn)
+				res.SendConnFailInChatStrangerWithMsg(res.ChatStrangerLimit.String(), conn)
 				continue
 			}
 
-		case relationship_enum.RelationFous, relationship_enum.RelationFans: // 已关注
+		case relationship_enum.RelationFous, relationship_enum.RelationFans:
 			var chatlist []models.ChatModel
 			global.Db.Find(&chatlist, "date(created_at) = date (now()) and ((seed_user_id = ? and rev_user_id = ?) or (seed_user_id = ? and rev_user_id = ?))",
 				userID, req.RevUserID, req.RevUserID, userID)
 
-			// 我发的 对方发的
 			var sendChatCount, revChatCount int
 			for _, model := range chatlist {
 				if model.SeedUserID == userID {
@@ -178,7 +166,7 @@ func (ChatApi) ChatView(c *gin.Context) {
 				}
 			}
 			if sendChatCount >= 1 && revChatCount == 0 {
-				res.SendConnFailWithMsg("对方未回复的情况下，当天只能发送一条消息", conn)
+				res.SendConnFailWithMsg(res.ChatLimitExceeded.String(), conn)
 				continue
 			}
 		}
@@ -190,7 +178,7 @@ func (ChatApi) ChatView(c *gin.Context) {
 		}
 		err = global.Db.Create(&model).Error
 		if err != nil {
-			res.SendConnFailWithMsg("消息发送失败", conn)
+			res.SendConnFailWithMsg(res.ChatSendFailed.String(), conn)
 			continue
 		}
 		item := ChatResponse{
@@ -202,10 +190,8 @@ func (ChatApi) ChatView(c *gin.Context) {
 				RevUserAvatar:    revUser.Avatar,
 			},
 		}
-		// 发给对方
 		fmt.Println("发送给对方:", req.RevUserID)
 		res.SendWsMsg(OnlineMap, req.RevUserID, item)
-		// 发给自己
 		item.IsMe = true
 		fmt.Println("发送给自己:", item)
 		res.SendConnOkWithData(item, conn)
