@@ -24,12 +24,7 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 	log.ShowRequest()
 	log.ShowResponse()
 	log.SetItem("用户名密码登录", "")
-	//var req PwdLoginRequest
-	//err := c.ShouldBindJSON(&req)
-	//if err != nil {
-	//	res.FailWithError(err, c)
-	//	return
-	//}
+
 	req := middlerware.GetBind[PwdLoginRequest](c)
 
 	if !global.Config.Site.Login.UsernamePwdLogin {
