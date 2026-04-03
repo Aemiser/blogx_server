@@ -17,11 +17,21 @@ func SendConnFailWithMsg(msg string, conn *websocket.Conn) {
 	conn.WriteMessage(websocket.TextMessage, byteData)
 }
 
-func SendConnFailInChatStrangerWithMsg(msg string, conn *websocket.Conn) {
+func SendConnFailInChatStrangerWithMsg(conn *websocket.Conn) {
 	data := Response{
 		Code: ChatStranger,
 		Data: empty,
-		Msg:  msg,
+		Msg:  ChatStranger.String(),
+	}
+	byteData, _ := json.Marshal(data)
+	conn.WriteMessage(websocket.TextMessage, byteData)
+}
+
+func SendConnFailInChatLimitExceededWithMsg(conn *websocket.Conn) {
+	data := Response{
+		Code: ChatLimitExceeded,
+		Data: empty,
+		Msg:  ChatLimitExceeded.String(),
 	}
 	byteData, _ := json.Marshal(data)
 	conn.WriteMessage(websocket.TextMessage, byteData)

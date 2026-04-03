@@ -146,7 +146,7 @@ func (ChatApi) ChatView(c *gin.Context) {
 				userID, req.RevUserID).Count(&sendChatCount)
 
 			if sendChatCount >= 1 {
-				res.SendConnFailInChatStrangerWithMsg(res.ChatStrangerLimit.String(), conn)
+				res.SendConnFailInChatStrangerWithMsg(conn)
 				continue
 			}
 
@@ -166,7 +166,7 @@ func (ChatApi) ChatView(c *gin.Context) {
 				}
 			}
 			if sendChatCount >= 1 && revChatCount == 0 {
-				res.SendConnFailWithMsg(res.ChatLimitExceeded.String(), conn)
+				res.SendConnFailInChatLimitExceededWithMsg(conn)
 				continue
 			}
 		}
