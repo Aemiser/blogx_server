@@ -42,6 +42,8 @@ func (ImageApi) ImageUploadView(c *gin.Context) {
 	hash := utils.Md5(byteData)
 	filePath := fmt.Sprintf("uploads/%s/%s.%s", global.Config.Uploads.ImageDir, hash, suffix)
 
+	// 前缀拼接
+	//filePath = "http://" + c.Request.Host + "/" + filePath
 	// 判断hash是否在库中
 	var model models.ImageModel
 	err = global.Db.Take(&model, "hash = ?", hash).Error
