@@ -14,4 +14,5 @@ func SearchRouter(r *gin.RouterGroup) {
 	r.GET("search/article", middlerware.BindQueryMiddlerware[search_api.ArticleSearchRequest], app.ArticleSearchView)
 	r.GET("search/tags", middlerware.BindQueryMiddlerware[common.PageInfo], app.TagAggView)
 	r.GET("search/text", middlerware.BindQueryMiddlerware[search_api.TextSearchRequest], app.TextSearchView)
+	r.GET("search/user", middlerware.BindQueryMiddlerware[search_api.UserSearchRequest], app.UserSearchView)
 }

@@ -14,7 +14,7 @@ import (
 )
 
 type UserBaseInfoResponse struct {
-	id           uint                       `json:"id"`
+	ID           uint                       `json:"id"`
 	Nickname     string                     `json:"nickname"`
 	Avatar       string                     `json:"avatar"`
 	CodeAge      uint                       `json:"codeAge"`
@@ -28,7 +28,7 @@ type UserBaseInfoResponse struct {
 	OpenCollect  bool                       `json:"openCollect"` // 公开我的收藏
 	OpenFollow   bool                       `json:"openFollow"`  // 公开我的关注
 	OpenFans     bool                       `json:"openFans"`    // 公开我的粉丝
-	HomeStyleID  uint                       `json:"homeStyleID"` // 主页样式ID
+	HomeStyleID  uint                       `json:"homeStyleID"` // 主页样式 ID
 	Relation     relationship_enum.Relation `json:"relation"`
 }
 
@@ -41,7 +41,7 @@ func (UserApi) UserBaseInfoView(c *gin.Context) {
 	}
 
 	var userModel models.UserModel
-	err = global.Db.Preload("UserConfigModel").Preload("ArticleList").Take(&userModel, req.ID).Error
+	err = global.Db.Debug().Preload("ArticleList").Take(&userModel, req.ID).Error
 	if err != nil {
 		res.FailWithMsg("用户不存在", c)
 		return
@@ -60,15 +60,13 @@ func (UserApi) UserBaseInfoView(c *gin.Context) {
 	}
 
 	data := UserBaseInfoResponse{
-		id:        userModel.ID,
-		Nickname:  userModel.Nickname,
-		Avatar:    userModel.Avatar,
-		CodeAge:   userModel.GetCodeAge(),
-		LookCount: lookCount + redis_user.GetUserCacheLook(req.ID),
-		//LikeCount:    1, //TODO 获取用户点赞数
-		FollowCount: 0,
-		FansCount:   0,
-		//CollectCount: 1, //TODO 获取用户收藏数
+		ID:           userModel.ID,
+		Nickname:     userModel.Nickname,
+		Avatar:       userModel.Avatar,
+		CodeAge:      userModel.GetCodeAge(),
+		LookCount:    lookCount + redis_user.GetUserCacheLook(req.ID),
+		FollowCount:  0,
+		FansCount:    0,
 		ArticleCount: len(userModel.ArticleList),
 		Place:        userModel.Addr,
 		OpenCollect:  openCollect,

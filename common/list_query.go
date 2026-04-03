@@ -3,6 +3,7 @@ package common
 import (
 	"blogx_server/global"
 	"fmt"
+	"reflect"
 
 	"gorm.io/gorm"
 )
@@ -39,6 +40,7 @@ type Options struct {
 	Where        *gorm.DB
 	Debug        bool
 	DefaultOrder string
+	IDList       bool
 }
 
 func ListQuery[T any](model T, options Options) (list []T, count int, err error) {
@@ -96,4 +98,37 @@ func ListQuery[T any](model T, options Options) (list []T, count int, err error)
 	}
 	err = query.Find(&list).Error
 	return
+}
+
+func ListQueryIDList[T any](model T, options Options) (list []uint, count int, err error) {
+	// 先查询完整数据
+	_list, count, err := ListQuery(model, options)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 使用反射提取每个对象的 ID
+	for _, item := range _list {
+		// 获取值的反射对象
+		val := reflect.ValueOf(item)
+
+		// 如果是指针，解引用
+		if val.Kind() == reflect.Ptr {
+			val = val.Elem()
+		}
+
+		// 获取 ID 字段
+		idField := val.FieldByName("ID")
+		if !idField.IsValid() {
+			// 尝试获取小写的 id 字段
+			idField = val.FieldByName("id")
+		}
+
+		if idField.IsValid() && idField.CanInterface() {
+			id := uint(idField.Uint())
+			list = append(list, id)
+		}
+	}
+
+	return list, count, nil
 }

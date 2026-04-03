@@ -13,6 +13,8 @@ const (
 	SuccessCode     Code = 0
 	FailValueCode   Code = 1001
 	FailServiceCode Code = 1002
+
+	ChatStranger Code = 5001
 )
 
 func (c Code) String() string {
