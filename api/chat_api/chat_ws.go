@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -79,6 +80,7 @@ func (ChatApi) ChatView(c *gin.Context) {
 			OnlineMap[userID][addr] = conn
 		}
 	}
+	fmt.Println("服务开启:", OnlineMap)
 
 	for {
 		// 消息类型，消息，错误
@@ -190,9 +192,11 @@ func (ChatApi) ChatView(c *gin.Context) {
 			},
 		}
 		// 发给对方
+		fmt.Println("发送给对方:", req.RevUserID)
 		res.SendWsMsg(OnlineMap, req.RevUserID, item)
 		// 发给自己
 		item.IsMe = true
+		fmt.Println("发送给自己:", item)
 		res.SendConnOkWithData(item, conn)
 	}
 	defer conn.Close()
@@ -207,5 +211,5 @@ func (ChatApi) ChatView(c *gin.Context) {
 			delete(OnlineMap, userID)
 		}
 	}
-	fmt.Println("服务关闭")
+	fmt.Println("服务关闭:", OnlineMap)
 }

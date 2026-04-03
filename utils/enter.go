@@ -78,3 +78,11 @@ func Unique[T comparable](ss []T) []T {
 	}
 	return newSlices
 }
+
+// 切片倒置
+func Reverse[T any](ss []T) []T {
+	for i, j := 0, len(ss)-1; i < j; i, j = i+1, j-1 {
+		ss[i], ss[j] = ss[j], ss[i]
+	}
+	return ss
+}

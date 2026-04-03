@@ -2,6 +2,7 @@ package res
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gorilla/websocket"
 )
@@ -30,6 +31,7 @@ func SendWsMsg(onlieMap map[uint]map[string]*websocket.Conn, userID uint, data a
 	addrMap, ok := onlieMap[userID]
 	// 没有这个接受人直接退出
 	if !ok {
+		fmt.Println("没有这个接受人")
 		return
 	}
 	// 编辑json格式信息
@@ -37,5 +39,6 @@ func SendWsMsg(onlieMap map[uint]map[string]*websocket.Conn, userID uint, data a
 	// 对每个客户端发送一条信息
 	for _, conn := range addrMap {
 		conn.WriteMessage(websocket.TextMessage, byteData)
+		fmt.Println("发送成功")
 	}
 }

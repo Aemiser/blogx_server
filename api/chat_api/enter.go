@@ -8,6 +8,8 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/utils"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,6 +43,7 @@ func (ChatApi) ChatListView(c *gin.Context) {
 	var UserChatActionList []models.UserChatAtionModel
 	var chatReadMap = map[uint]bool{}
 
+	fmt.Println("RevUserID:", cr.RevUserID)
 	global.Db.Find(&UserChatActionList, "user_id = ? and (is_delete = ? or is_delete is null)", cr.RevUserID, false)
 	for _, model := range UserChatActionList {
 		chatReadMap[model.ChatID] = true
@@ -70,9 +73,11 @@ func (ChatApi) ChatListView(c *gin.Context) {
 		query = query.Where("id not in ?", deletedIDList)
 	}
 	_list, count, _ := common.ListQuery(models.ChatModel{}, common.Options{
-		PageInfo: cr.PageInfo,
-		Preloads: []string{"SeedUserModel", "RevUserModel"},
-		Where:    query,
+		PageInfo:     cr.PageInfo,
+		Preloads:     []string{"SeedUserModel", "RevUserModel"},
+		Debug:        true,
+		Where:        query,
+		DefaultOrder: "created_at desc",
 	})
 
 	var list []ChatListResponse
@@ -91,5 +96,6 @@ func (ChatApi) ChatListView(c *gin.Context) {
 		}
 		list = append(list, item)
 	}
+	list = utils.Reverse(list)
 	res.SuccessWithList(list, count, c)
 }
