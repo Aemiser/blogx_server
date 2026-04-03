@@ -64,19 +64,21 @@ func (ImageApi) ImageTransferView(c *gin.Context) {
 	}
 
 	// 检查库中是否存在相同的图片
-	err = global.Db.Find(&models.ImageModel{}, "hash = ?", hash).Error
-	if err != nil {
-		// 入库
-		err = global.Db.Create(&models.ImageModel{
-			Filename: filename,
-			Path:     filePath,
-			Size:     int64(len(byteData)),
-			Hash:     hash,
-		}).Error
+	//filePath = "http://" + c.Request.Host + "/" + filePath
+	// 判断hash是否在库中
+	var model models.ImageModel
+	err = global.Db.Take(&model, "hash = ?", hash).Error
+	if err == nil {
+		// 说明存在
+		logrus.Infof("上传的图片重复了 %s<==>%s", filename, hash)
+	} else {
+		err = global.Db.Find(&models.ImageModel{}, "hash = ?", hash).Error
 		if err != nil {
-			logrus.Infof("数据库创建图片失败：%v", err)
-			res.FailWithError(err, c)
-			return
+			if err != nil {
+				logrus.Infof("数据库创建图片失败：%v", err)
+				res.FailWithError(err, c)
+				return
+			}
 		}
 	}
 
