@@ -72,13 +72,17 @@ func (ImageApi) ImageTransferView(c *gin.Context) {
 		// 说明存在
 		logrus.Infof("上传的图片重复了 %s<==>%s", filename, hash)
 	} else {
-		err = global.Db.Find(&models.ImageModel{}, "hash = ?", hash).Error
+		// 入库
+		err = global.Db.Create(&models.ImageModel{
+			Filename: filename,
+			Path:     filePath,
+			Size:     int64(len(byteData)),
+			Hash:     hash,
+		}).Error
 		if err != nil {
-			if err != nil {
-				logrus.Infof("数据库创建图片失败：%v", err)
-				res.FailWithError(err, c)
-				return
-			}
+			logrus.Infof("数据库创建图片失败：%v", err)
+			res.FailWithError(err, c)
+			return
 		}
 	}
 
