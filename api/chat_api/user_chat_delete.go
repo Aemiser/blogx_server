@@ -15,11 +15,9 @@ func (ChatApi) UserChatDeleteView(c *gin.Context) {
 	cr := middlerware.GetBind[models.IDListRequest](c)
 	userID := jwts.GetUserIDByGin(c)
 
-	// 查找对应的聊天信息
 	var chatList []models.ChatModel
 	global.Db.Find(&chatList, "id in ?", cr.IDList)
 
-	// 之前是否操作过
 	chatMap := common.ScanMapV2(models.UserChatAtionModel{}, common.ScanMapOptions{
 		Where: global.Db.Where("user_id = ? and chat_id in ?", userID, cr.IDList),
 		Key:   "ChatID",
@@ -47,7 +45,7 @@ func (ChatApi) UserChatDeleteView(c *gin.Context) {
 	if len(addChatAcList) > 0 {
 		err := global.Db.Debug().Create(&addChatAcList).Error
 		if err != nil {
-			res.FailWithMsg("删除消息失败", c)
+			res.FailWithCode(res.ChatDeleteFailed, c)
 			return
 		}
 	}
@@ -55,7 +53,7 @@ func (ChatApi) UserChatDeleteView(c *gin.Context) {
 	if len(updateChatAcIDList) > 0 {
 		err := global.Db.Debug().Model(&models.UserChatAtionModel{}).Where("id in ?", updateChatAcIDList).Update("is_delete", true).Error
 		if err != nil {
-			res.FailWithMsg("删除消息失败", c)
+			res.FailWithCode(res.ChatDeleteFailed, c)
 			return
 		}
 	}

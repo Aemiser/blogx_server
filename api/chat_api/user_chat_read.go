@@ -18,7 +18,7 @@ func (ChatApi) UserChatReadView(c *gin.Context) {
 	var chat models.ChatModel
 	err := global.Db.Take(&chat, cr.ID).Error
 	if err != nil {
-		res.FailWithMsg("聊天记录不存在", c)
+		res.FailWithCode(res.ChatSessionEmpty, c)
 		return
 	}
 	item := ChatResponse{
@@ -35,7 +35,7 @@ func (ChatApi) UserChatReadView(c *gin.Context) {
 	}
 	var chatAc models.UserChatAtionModel
 	err = global.Db.Take(&chatAc, "user_id =? and chat_id = ?", userID, cr.ID).Error
-	if err != nil { // 不存在即创建
+	if err != nil {
 		global.Db.Create(&models.UserChatAtionModel{
 			UserID: userID,
 			ChatID: cr.ID,
@@ -50,7 +50,7 @@ func (ChatApi) UserChatReadView(c *gin.Context) {
 	}
 
 	if chatAc.IsDelete {
-		res.FailWithMsg("消息已删除", c)
+		res.FailWithCode(res.ChatMsgDeleted, c)
 		return
 	}
 

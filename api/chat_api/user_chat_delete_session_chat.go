@@ -17,7 +17,7 @@ func (ChatApi) UserChatDeleteSessionChatView(c *gin.Context) {
 
 	err := global.Db.Take(&models.UserModel{}, userID).Error
 	if err != nil {
-		res.FailWithMsg("用户不存在", c)
+		res.FailWithCode(res.UserNotFound, c)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (ChatApi) UserChatDeleteSessionChatView(c *gin.Context) {
 	if len(addChatAcList) > 0 {
 		err := global.Db.Debug().Create(&addChatAcList).Error
 		if err != nil {
-			res.FailWithMsg("删除消息失败", c)
+			res.FailWithCode(res.ChatDeleteFailed, c)
 			return
 		}
 	}
@@ -70,7 +70,7 @@ func (ChatApi) UserChatDeleteSessionChatView(c *gin.Context) {
 	if len(updateChatAcIDList) > 0 {
 		err := global.Db.Debug().Model(&models.UserChatAtionModel{}).Where("id in ?", updateChatAcIDList).Update("is_delete", true).Error
 		if err != nil {
-			res.FailWithMsg("删除消息失败", c)
+			res.FailWithCode(res.ChatDeleteFailed, c)
 			return
 		}
 	}

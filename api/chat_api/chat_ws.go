@@ -96,7 +96,7 @@ func (ChatApi) ChatView(c *gin.Context) {
 		var req ChatRequest
 		err2 := json.Unmarshal(p, &req)
 		if err2 != nil {
-			res.SendConnFailWithMsg("参数错误", conn)
+			res.SendConnFailWithMsg(res.FailValueCode.String(), conn)
 			continue
 
 		}

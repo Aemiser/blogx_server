@@ -7,29 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Code int
-
-const (
-	SuccessCode     Code = 0
-	FailValueCode   Code = 1001
-	FailServiceCode Code = 1002
-
-	ChatStranger Code = 5001
-)
-
-func (c Code) String() string {
-	switch c {
-	case SuccessCode:
-		return "成功"
-	case FailValueCode:
-		return "参数错误"
-	case FailServiceCode:
-		return "服务错误"
-	default:
-		return "未知错误"
-	}
-}
-
 type Response struct {
 	Code Code   `json:"code"`
 	Data any    `json:"data"`
@@ -88,7 +65,15 @@ func FailWithCode(code Code, c *gin.Context) {
 	Response{code, empty, code.String()}.Json(c)
 }
 
+func FailWithCodeAndMsg(code Code, msg string, c *gin.Context) {
+	Response{code, empty, msg}.Json(c)
+}
+
 func FailWithError(err error, c *gin.Context) {
 	data, msg := validata.ValidateError(err)
 	FailWithData(data, msg, c)
+}
+
+func (c Code) ToResp(data any) Response {
+	return Response{Code: c, Data: data, Msg: c.String()}
 }
