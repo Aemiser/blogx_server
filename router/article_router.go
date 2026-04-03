@@ -52,4 +52,7 @@ func ArticleRouter(r *gin.RouterGroup) {
 	// 推荐
 	r.GET("article/auth_recommend", middlerware.BindQueryMiddlerware[common.PageInfo], app.AuthRecommentView)
 	r.GET("article/article_recommend", middlerware.BindQueryMiddlerware[common.PageInfo], app.ArticleRecommentView)
+
+	//添加到足迹
+	r.POST("article/look", middlerware.BindJsonMiddlerware[article_api.ArticleLookRequest], app.ArticleLookView)
 }

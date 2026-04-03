@@ -103,7 +103,7 @@ func (ArticleApi) ArticleLookListView(c *gin.Context) {
 		UserID: cr.UserID,
 	}, common.Options{
 		PageInfo: cr.PageInfo,
-		Preloads: []string{"UserModel", "ArticleModel"},
+		Preloads: []string{"UserModel", "ArticleModel", "ArticleModel.UserModel"},
 	})
 	fmt.Println(_list)
 	var list = make([]ArticleLookListResponse, 0)
@@ -113,9 +113,9 @@ func (ArticleApi) ArticleLookListView(c *gin.Context) {
 			LookData:  model.ArticleModel.CreatedAt,
 			Title:     model.ArticleModel.Title,
 			Cover:     model.ArticleModel.Cover,
-			Nickname:  model.UserModel.Nickname,
-			Avatar:    model.UserModel.Avatar,
-			UserID:    model.UserID,
+			Nickname:  model.ArticleModel.UserModel.Nickname, // 作者名字
+			Avatar:    model.ArticleModel.UserModel.Avatar,   // 作者头像
+			UserID:    model.ArticleModel.UserID,             // 作者ID
 			ArticleID: model.ArticleID,
 		})
 	}
