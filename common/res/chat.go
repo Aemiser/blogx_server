@@ -19,7 +19,7 @@ const (
 )
 
 func InitChatCode() {
-	RegisterCode(ChatStranger, "对方不是您的好友")
+	RegisterCode(ChatStranger, "对方不是您的好友,只能发送一条消息")
 	RegisterCode(ChatNotFound, "用户不存在")
 	RegisterCode(ChatMsgEmpty, "消息内容为空")
 	RegisterCode(ChatMsgTypeError, "消息类型错误")
