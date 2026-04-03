@@ -137,7 +137,7 @@ func (ChatApi) ChatView(c *gin.Context) {
 		// 陌生人，如果对方开了陌生人私信，那么就能聊
 
 		relation := focus_service.CalcUserRelationship(userID, req.RevUserID)
-		//fmt.Printf("用户%d %d关系为：%d", userID, req.RevUserID, relation)
+		fmt.Printf("用户%d %d关系为：%d", userID, req.RevUserID, relation)
 		switch relation {
 		case relationship_enum.RelationStranger:
 			var revUserMsgConf models.UserMessageConfModel
@@ -150,6 +150,17 @@ func (ChatApi) ChatView(c *gin.Context) {
 				res.SendConnFailWithMsg("对方未开启陌生人消息", conn)
 				continue
 			}
+
+			var sendChatCount int64
+			global.Db.Model(models.ChatModel{}).Where(" seed_user_id = ? and rev_user_id = ?",
+				userID, req.RevUserID).Count(&sendChatCount)
+
+			// 我发的
+			if sendChatCount >= 1 {
+				res.SendConnFailInChatStrangerWithMsg("陌生人只能发送一条消息", conn)
+				continue
+			}
+
 		case relationship_enum.RelationFous, relationship_enum.RelationFans: // 已关注
 			var chatlist []models.ChatModel
 			global.Db.Find(&chatlist, "date(created_at) = date (now()) and ((seed_user_id = ? and rev_user_id = ?) or (seed_user_id = ? and rev_user_id = ?))",
@@ -212,4 +223,30 @@ func (ChatApi) ChatView(c *gin.Context) {
 		}
 	}
 	fmt.Println("服务关闭:", OnlineMap)
+}
+
+// canSendMessage 检查用户是否可以向对方发送消息
+// 规则：如果当天已经发送过消息但对方未回复，则不能再次发送
+func canSendMessage(userID, revUserID uint) bool {
+	// 统计当天我发送的消息数量（我是发送者）
+	var mySendCount int64
+	global.Db.Model(&models.ChatModel{}).
+		Where("date(created_at) = date(now()) AND seed_user_id = ? AND rev_user_id = ?",
+			userID, revUserID).
+		Count(&mySendCount)
+
+	// 如果我还没发过消息，可以发送
+	if mySendCount == 0 {
+		return true
+	}
+
+	// 统计当天对方发送的消息数量（对方是发送者，我是接收者）
+	var revSendCount int64
+	global.Db.Model(&models.ChatModel{}).
+		Where("date(created_at) = date(now()) AND seed_user_id = ? AND rev_user_id = ?",
+			revUserID, userID).
+		Count(&revSendCount)
+
+	// 如果对方回复过，可以继续发送
+	return revSendCount > 0
 }
