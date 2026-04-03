@@ -63,17 +63,21 @@ func (ImageApi) ImageTransferView(c *gin.Context) {
 		return
 	}
 
-	// 入库
-	err = global.Db.Create(&models.ImageModel{
-		Filename: filename,
-		Path:     filePath,
-		Size:     int64(len(byteData)),
-		Hash:     hash,
-	}).Error
+	// 检查库中是否存在相同的图片
+	err = global.Db.Find(&models.ImageModel{}, "hash = ?", hash).Error
 	if err != nil {
-		logrus.Infof("数据库创建图片失败：%v", err)
-		res.FailWithError(err, c)
-		return
+		// 入库
+		err = global.Db.Create(&models.ImageModel{
+			Filename: filename,
+			Path:     filePath,
+			Size:     int64(len(byteData)),
+			Hash:     hash,
+		}).Error
+		if err != nil {
+			logrus.Infof("数据库创建图片失败：%v", err)
+			res.FailWithError(err, c)
+			return
+		}
 	}
 
 	res.SuccessWithData("/"+filePath, c)
