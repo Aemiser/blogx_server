@@ -76,10 +76,12 @@ func (ArticleApi) ArticleDetailView(c *gin.Context) {
 			resp.IsDigg = true
 		}
 
+		// 找到有就显示
 		var userCollectModel models.UserArticleCollectModel
 		err = global.Db.Take(&userCollectModel, "article_id = ? and user_id = ?", article.ID, claims.Claims.UserID).Error
 		if err == nil {
 			resp.IsCollect = true
+			resp.CollectID = userCollectModel.CollectID
 		}
 
 	}
