@@ -101,6 +101,7 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		global.Db.Model(models.UserArticleCollectModel{}).Where("collect_id = ?", cr.CollectID).Select("article_id").Scan(&articleIDList)
 		fmt.Println("收藏夹IDList", articleIDList)
 		query.Where("id in ?", articleIDList)
+		query.Where("status = ? ", enum.ArticlePublished)
 	}
 
 	// 对于类型2,3而言存在order判断
