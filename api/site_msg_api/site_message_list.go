@@ -39,8 +39,9 @@ func (SiteMsgApi) SiteMsgListView(c *gin.Context) {
 	_list, count, _ := common.ListQuery(models.MessageModel{
 		RecvUserID: claims.Claims.UserID,
 	}, common.Options{
-		PageInfo: cr.PageInfo,
-		Where:    global.Db.Where("type in ?", typeList),
+		PageInfo:     cr.PageInfo,
+		Where:        global.Db.Where("type in ?", typeList),
+		DefaultOrder: "created_at desc",
 	})
 
 	var userIDList []uint
