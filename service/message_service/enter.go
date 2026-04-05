@@ -31,12 +31,31 @@ func InsertCommentMessage(model models.CommentModel) {
 
 // InsertApplyMessage 插入一条回复消息
 func InsertApplyMessage(model models.CommentModel) {
-	global.Db.Preload("ParentModel").Preload("UserModel").Preload("ArticleModel").Take(&model)
+	global.Db.Preload("UserModel").Preload("ArticleModel").Take(&model)
 	fmt.Println("里父评论ID：", model.ID)
-	fmt.Println("里2父评论ID：", model.ParentModel.UserID)
+	// 确定接收消息的用户ID
+	var recvUserID uint
+
+	// 如果有父评论，给父评论的作者发消息
+	if model.ParentID != nil {
+		var parentComment models.CommentModel
+		err := global.Db.Preload("UserModel").Take(&parentComment, *model.ParentID).Error
+		if err == nil {
+			recvUserID = parentComment.UserID
+			fmt.Println("给父评论作者发消息，父评论ID：", parentComment.ID, "作者UID：", recvUserID)
+		} else {
+			logrus.Warnf("查找父评论 %d 失败：%v", *model.ParentID, err)
+			return
+		}
+	} else {
+		// 如果没有父评论，说明是直接回复根评论，给根评论作者发消息
+		recvUserID = model.UserID
+		fmt.Println("直接回复根评论，给评论作者发消息，评论ID：", model.ID, "作者UID：", recvUserID)
+	}
+
 	err := global.Db.Create(&models.MessageModel{
 		Type:               message_type_enum.CommentType,
-		RecvUserID:         model.ParentModel.UserID,
+		RecvUserID:         recvUserID,
 		ActionUserID:       model.UserID,
 		ActionUserNickName: model.UserModel.Nickname,
 		ActionUserAvatar:   model.UserModel.Avatar,
