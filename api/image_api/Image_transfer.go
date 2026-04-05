@@ -27,30 +27,27 @@ func (ImageApi) ImageTransferView(c *gin.Context) {
 	response, err := http.Get(cr.Url)
 	if err != nil {
 		logrus.Errorf("图片获取失败：%v", err)
-		res.FailWithMsg("图片获取失败", c)
+		res.FailWithCode(res.ImageTransferFailed, c)
 		return
 	}
 	defer response.Body.Close()
 
 	fmt.Println(response.Status)
 
-	// 从 URL 路径中提取文件名
 	filename := extractFilenameFromUrl(cr.Url)
 
-	// 从 Content-Disposition 头获取文件名（如果有）
 	if contentDisposition := response.Header.Get("Content-Disposition"); contentDisposition != "" {
 		if parsedFilename := parseFilenameFromDisposition(contentDisposition); parsedFilename != "" {
 			filename = parsedFilename
 		}
 	}
 
-	// 根据 Content-Type 确定文件后缀
 	suffix := getFileSuffix(response.Header.Get("Content-Type"))
 
 	byteData, err := io.ReadAll(response.Body)
 	if err != nil {
 		logrus.Errorf("读取图片数据失败：%v", err)
-		res.FailWithMsg("读取图片数据失败", c)
+		res.FailWithCode(res.ImageTransferFailed, c)
 		return
 	}
 
@@ -59,13 +56,10 @@ func (ImageApi) ImageTransferView(c *gin.Context) {
 	err = os.WriteFile(filePath, byteData, 0666)
 	if err != nil {
 		logrus.Errorf("图片保存失败：%v", err)
-		res.FailWithMsg("图片保存失败", c)
+		res.FailWithCode(res.ImageSaveFailed, c)
 		return
 	}
 
-	// 检查库中是否存在相同的图片
-	//filePath = "http://" + c.Request.Host + "/" + filePath
-	// 判断hash是否在库中
 	var model models.ImageModel
 	err = global.Db.Take(&model, "hash = ?", hash).Error
 	if err == nil {
@@ -81,7 +75,7 @@ func (ImageApi) ImageTransferView(c *gin.Context) {
 		}).Error
 		if err != nil {
 			logrus.Infof("数据库创建图片失败：%v", err)
-			res.FailWithError(err, c)
+			res.FailWithCode(res.ImageUploadFailed, c)
 			return
 		}
 	}

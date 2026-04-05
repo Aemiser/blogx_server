@@ -21,12 +21,12 @@ type QiNiuGenTokenResponse struct {
 func (ImageApi) QiNiuGenToken(c *gin.Context) {
 	q := global.Config.QiNiu
 	if !q.Enable {
-		res.FailWithMsg("七牛云未启用", c)
+		res.FailWithCode(res.QiNiuNotEnabled, c)
 		return
 	}
 	token, err := qiniu_service.GenToken()
 	if err != nil {
-		res.FailWithError(err, c)
+		res.FailWithCode(res.QiNiuTokenFailed, c)
 		return
 	}
 

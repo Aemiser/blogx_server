@@ -84,6 +84,9 @@ func (SiteApi) SiteInfoView(c *gin.Context) {
 		result := global.Config.Ai
 		result.SecretKey = "******"
 		data = result
+	case "image":
+		result := global.Config.Uploads
+		data = result
 	default:
 		res.FailWithMsg("不存在这个错误", c)
 		return
@@ -128,6 +131,10 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 		var data conf.Ai
 		err = c.ShouldBindJSON(&data)
 		result = data
+	case "image":
+		var data conf.Uploads
+		err = c.ShouldBindJSON(&data)
+		result = data
 	default:
 		res.FailWithMsg("不存在这个配置", c)
 		return
@@ -166,6 +173,8 @@ func (SiteApi) SiteUpdateView(c *gin.Context) {
 			s.SecretKey = global.Config.Ai.SecretKey
 		}
 		global.Config.Ai = s
+	case conf.Uploads:
+		global.Config.Uploads = s
 	}
 	// 保存修改的配置
 	core.WriteConf()
