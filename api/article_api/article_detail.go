@@ -20,6 +20,7 @@ type ArticleDetailResponse struct {
 	CategoryTitlt *string `json:"categoryTitlt"`
 	IsDigg        bool    `json:"isDigg"`
 	IsCollect     bool    `json:"isCollect"`
+	CollectID     uint    `json:"collectID"`
 }
 
 func (ArticleApi) ArticleDetailView(c *gin.Context) {
