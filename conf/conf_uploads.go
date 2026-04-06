@@ -3,10 +3,11 @@ package conf
 import "strings"
 
 type Uploads struct {
-	Size      int64    `yaml:"size"`
-	Type      string   `yaml:"type"`
-	WriteList []string `yaml:"writeList"`
-	ImageDir  string   `yaml:"imageDir"`
+	Size         int64    `yaml:"size"`
+	Type         string   `yaml:"type"`
+	WriteList    []string `yaml:"writeList"`
+	ImageDir     string   `yaml:"imageDir"`
+	ArticleCover string   `yaml:"articleCover"`
 }
 
 const (

@@ -25,10 +25,9 @@ func (ArticleApi) CollectCreateView(c *gin.Context) {
 	claims := jwts.GetClaimsByGin(c)
 	var model models.CollectModel
 	if cr.ID == 0 {
-		//创建
 		err := global.Db.Take(&model, "user_id  = ? and title = ?", claims.Claims.UserID, cr.Title).Error
 		if err == nil {
-			res.FailWithMsg("分类已存在", c)
+			res.FailWithCode(res.ArticleCollectExists, c)
 			return
 		}
 
@@ -39,29 +38,26 @@ func (ArticleApi) CollectCreateView(c *gin.Context) {
 			Abstract: cr.Abstract,
 		}).Error
 		if err != nil {
-			res.FailWithMsg("创建收藏夹错误", c)
+			res.FailWithCode(res.ArticleCollectCreateFail, c)
 			return
 		}
 		res.SuccessWithMsg("创建收藏夹成功", c)
 		return
 	}
 
-	// 更新
-	// 先根据 ID 查询出记录
 	err := global.Db.First(&model, cr.ID).Error
 	if err != nil {
-		res.FailWithMsg("分类不存在", c)
+		res.FailWithCode(res.ArticleCollectNotFound, c)
 		return
 	}
 
-	// 再执行更新
 	err = global.Db.Model(&model).Updates(map[string]any{
 		"title":    cr.Title,
 		"cover":    cr.Cover,
 		"abstract": cr.Abstract,
 	}).Error
 	if err != nil {
-		res.FailWithMsg("更新收藏夹错误", c)
+		res.FailWithCode(res.ArticleCollectUpdateFail, c)
 		return
 	}
 	res.SuccessWithMsg("更新收藏夹成功", c)
@@ -89,7 +85,7 @@ func (ArticleApi) CollectListView(c *gin.Context) {
 	case 1:
 		claims, err := jwts.ParseTokenByGin(c)
 		if err != nil {
-			res.FailWithError(err, c)
+			res.FailWithCode(res.SysUnauthorized, c)
 			return
 		}
 		cr.UserID = claims.Claims.UserID
@@ -97,23 +93,23 @@ func (ArticleApi) CollectListView(c *gin.Context) {
 		var userconf models.UserConfigModel
 		err := global.Db.Take(&userconf, "user_id = ?", cr.UserID).Error
 		if err != nil {
-			res.FailWithMsg("用户不存在", c)
+			res.FailWithCode(res.UserNotFound, c)
 			return
 		}
 
 		if !userconf.OpenCollect {
-			res.FailWithMsg("用户未开放收藏功能", c)
+			res.FailWithCode(res.UserNotOpenCollect, c)
 			return
 		}
 	case 3:
 		claims, err := jwts.ParseTokenByGin(c)
 		if err != nil {
-			res.FailWithError(err, c)
+			res.FailWithCode(res.SysUnauthorized, c)
 			return
 		}
 
 		if claims.Claims.Role != enum.AdminRole {
-			res.FailWithMsg("无权限", c)
+			res.FailWithCode(res.SysForbidden, c)
 			return
 		}
 		preloads = append(preloads, "UserModel")
@@ -160,7 +156,7 @@ func (ArticleApi) CollectRemoveView(c *gin.Context) {
 	if len(list) > 0 {
 		err := global.Db.Delete(&list).Error
 		if err != nil {
-			res.FailWithMsg("删除收藏夹错误", c)
+			res.FailWithCode(res.ArticleCollectDeleteFail, c)
 			return
 		}
 	}

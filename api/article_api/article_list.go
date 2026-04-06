@@ -17,11 +17,11 @@ import (
 
 type ArticleListRequest struct {
 	common.PageInfo
-	Type       int8  `form:"type" binding:"required,oneof=1 2 3 "` // 1看别人的 2看自己的 3管理员看
-	UserID     uint  `form:"userID"`
-	CategoryID *uint `form:"categoryID"`
-	Status     enum.ArticleStatus
-	CollectID  uint `form:"collectID"`
+	Type       int8               `form:"type" binding:"required,oneof=1 2 3 "` // 1看别人的 2看自己的 3管理员看
+	UserID     uint               `form:"userID"`
+	CategoryID *uint              `form:"categoryID"`
+	Status     enum.ArticleStatus `form:"status"`
+	CollectID  uint               `form:"collectID"`
 }
 
 type ArticleListResponse struct {
@@ -31,6 +31,7 @@ type ArticleListResponse struct {
 	UserNickname  string  `json:"nickName"`
 	UserAvatar    string  `json:"userAvatar"`
 	CategoryTitle *string `json:"categoryTitle"`
+	NoPublish     bool    `json:"noPublish"`
 }
 
 func (ArticleApi) ArticleListView(c *gin.Context) {
@@ -95,13 +96,14 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		}
 	}
 	query := global.Db.Where("")
+	//var NoPublishIDList []uint
+	var articleIDList []uint
 	if cr.CollectID != 0 {
 		fmt.Println("收藏夹ID", cr.CollectID)
-		var articleIDList []uint
 		global.Db.Model(models.UserArticleCollectModel{}).Where("collect_id = ?", cr.CollectID).Select("article_id").Scan(&articleIDList)
 		fmt.Println("收藏夹IDList", articleIDList)
-		query.Where("id in ?", articleIDList)
-		query.Where("status = ? ", enum.ArticlePublished)
+		query = query.Where("id in ?", articleIDList)
+
 	}
 
 	// 对于类型2,3而言存在order判断
@@ -145,9 +147,13 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		option.DefaultOrder = fmt.Sprintf("%s,created_at desc", sql.CoverSliceOrderSql(topArticleIDList))
 	}
 
+	// 适配收藏夹查文章时候
+	if cr.CollectID == 0 && cr.UserID != 0 {
+		option.Where = option.Where.Where("user_id = ?", cr.UserID)
+	}
 	// 文章列表查询
 	_list, count, _ := common.ListQuery(models.ArticleModel{
-		UserID:     cr.UserID,
+		//UserID:     cr.UserID,
 		CategoryID: cr.CategoryID,
 		Status:     cr.Status,
 	}, option)
@@ -174,6 +180,10 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 
 		if model.Category != nil {
 			date.CategoryTitle = &model.Category.Title
+		}
+		if model.Status != enum.ArticlePublished && cr.Type != 3 {
+			date.NoPublish = true
+			date.ArticleModel.Cover = "http://" + c.Request.Host + "/" + global.Config.Uploads.ArticleCover
 		}
 		list = append(list, date)
 	}
