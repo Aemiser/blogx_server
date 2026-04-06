@@ -78,7 +78,7 @@ func (GlobalNotificationApi) ListView(c *gin.Context) {
 				continue
 			}
 			if model.IsRead {
-				readMsgMap[model.ID] = true
+				readMsgMap[model.NotificationID] = true
 			}
 		}
 		// 如果没有就不加这句

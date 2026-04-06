@@ -15,7 +15,9 @@ type UserMsgResponse struct {
 	CommentMsgCount int `json:"commentMsgCount"`
 	DiggMsgCount    int `json:"diggMsgCount"`
 	SystemMsgCount  int `json:"systemMsgCount"`
-	PrivateMsgCount int `json:"privateMsgCount"`
+	//PrivateMsgCount int `json:"privateMsgCount"`
+	PrivateMsgCount int `json:"-"`
+	GlobalMsgCount  int `json:"globalMsgCount"`
 }
 
 func (SiteMsgApi) UserMsgView(c *gin.Context) {
@@ -63,7 +65,7 @@ func (SiteMsgApi) UserMsgView(c *gin.Context) {
 	var userReadMsgList []uint
 	global.Db.Model(&models.UserGlobalnotificationModel{}).
 		Where("user_id =? and (is_read = ? or is_delete = ?)", userID, true, true).
-		Select("id").Scan(&userReadMsgList)
+		Select("notification_id").Scan(&userReadMsgList)
 
 	// 算未读的全局消息
 	var systemMsg []models.GlobalNotificationModel
@@ -72,6 +74,6 @@ func (SiteMsgApi) UserMsgView(c *gin.Context) {
 		query.Where("id not in ? ", userReadMsgList)
 	}
 	global.Db.Where(query).Find(&systemMsg)
-	data.SystemMsgCount += len(systemMsg)
+	data.GlobalMsgCount += len(systemMsg)
 	res.SuccessWithData(data, c)
 }

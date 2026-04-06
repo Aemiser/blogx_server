@@ -66,7 +66,7 @@ func (LogApi) LogListView(c *gin.Context) {
 		})
 
 	}
-	res.FailWithList(_list, int(count), c)
+	res.SuccessWithList(_list, int(count), c)
 	return
 }
 

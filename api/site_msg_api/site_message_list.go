@@ -35,6 +35,7 @@ func (SiteMsgApi) SiteMsgListView(c *gin.Context) {
 		typeList = append(typeList, message_type_enum.DiggArticleType, message_type_enum.CollectArticleType, message_type_enum.DiggCommentType)
 	case 3:
 		typeList = append(typeList, message_type_enum.SystemType)
+		// 全局消息
 	}
 	_list, count, _ := common.ListQuery(models.MessageModel{
 		RecvUserID: claims.Claims.UserID,
