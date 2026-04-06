@@ -13,7 +13,7 @@ import (
 type ArticleRecommentResponse struct {
 	ID        uint   `json:"id" gorm:"column:id"`
 	Title     string `json:"title" gorm:"column:title"`
-	LookCount int    `json:"lookCount" gorm:"column:lookCount"`
+	LookCount int    `json:"lookCount" gorm:"column:look_count"`
 }
 
 func (ArticleApi) ArticleRecommentView(c *gin.Context) {
