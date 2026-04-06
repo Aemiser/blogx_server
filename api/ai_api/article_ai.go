@@ -9,6 +9,7 @@ import (
 	"blogx_server/service/ai_service"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,12 @@ import (
 
 type ArticleAiRequest struct {
 	Content string `form:"content" binding:"required"`
+}
+
+type ArticleAIProRequest struct {
+	ID       uint   `json:"id"`
+	Abstract string `json:"abstract"`
+	Title    string `json:"title"`
 }
 
 func (AiApi) ArticleAiView(c *gin.Context) {
@@ -42,18 +49,43 @@ func (AiApi) ArticleAiView(c *gin.Context) {
 		byteData, _ := json.Marshal(list)
 		content = string(byteData)
 	} else {
-
+		// 提取用户语句里的技术关键词
+		msg, err := ai_service.KeywordChat(cr.Content)
+		if err != nil {
+			res.SSEFail("ai分析失败", c)
+			return
+		}
+		fmt.Println(msg)
+		var keywords []string
+		err = json.Unmarshal([]byte(msg), &keywords)
+		if err != nil {
+			logrus.Errorf("解析失败: %s %s", err, msg)
+			res.SSEFail("解析失败", c)
+			return
+		}
+		fmt.Println("关键词列表：", keywords)
 		query := elastic.NewBoolQuery()
 		query.Must(elastic.NewTermQuery("status", 3)) // 必须是已发布状态
-		// 使用 MatchPhraseQuery 进行短语匹配，避免分词导致的错误匹配
-		query.Should(
-			elastic.NewMatchQuery("title", cr.Content),
-			elastic.NewMatchQuery("abstract", cr.Content),
-			elastic.NewMatchQuery("content", cr.Content),
-		)
+
+		if len(keywords) > 0 {
+			keywordQuery := elastic.NewBoolQuery()
+			for _, keyword := range keywords {
+				k := strings.ToLower(keyword) // 转小写
+
+				fmt.Printf("处理关键词: %s -> %s\n", keyword, k)
+
+				keywordQuery.Should(
+					elastic.NewMatchQuery("title", k),
+					elastic.NewMatchQuery("abstract", k),
+					elastic.NewMatchQuery("content", k),
+				)
+			}
+			keywordQuery.MinimumNumberShouldMatch(1)
+			query.Must(keywordQuery)
+		}
 		result, err := global.ESClient.Search(models.ArticleModel{}.Index()).
 			Query(query).
-			From(1).
+			From(0).
 			Size(10).
 			Do(context.Background())
 		if err != nil {
@@ -66,10 +98,28 @@ func (AiApi) ArticleAiView(c *gin.Context) {
 
 		var list []string
 		for _, hit := range result.Hits.Hits {
-			list = append(list, string(hit.Source))
+			var article models.ArticleModel
+			err = json.Unmarshal(hit.Source, &article)
+			if err != nil {
+				logrus.Error("json.Unmarshal err:", err)
+				continue
+			}
+			item := ArticleAIProRequest{
+				ID:       article.ID,
+				Title:    article.Title,
+				Abstract: article.Abstract,
+			}
+			bytedata, err1 := json.Marshal(item)
+			if err1 != nil {
+				logrus.Error("json.Marshal err:", err1)
+				continue
+			}
+			list = append(list, string(bytedata))
+			//fmt.Println("文章：", article)
 		}
 		content = "[" + strings.Join(list, ",") + "]"
 	}
+	fmt.Println("拼接的提示词：", content)
 	msgChan, err := ai_service.ChatStream(cr.Content, content)
 	if err != nil {
 		res.SSEFail("ai分析失败", c)

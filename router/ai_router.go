@@ -16,4 +16,10 @@ func AiRouter(r *gin.RouterGroup) {
 	r.POST("ai/import", middlerware.AuthMiddleware, middlerware.BindJsonMiddlerware[ai_api.AIAnalysisRequest], app.ArticleImportView)
 	// ai智能推荐文章
 	r.GET("ai/article", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[ai_api.ArticleAiRequest], app.ArticleAiView)
+	// ai智能推荐文章 v2 (RAG 向量检索)
+	r.GET("ai/article/v2", middlerware.AuthMiddleware, middlerware.BindQueryMiddlerware[ai_api.ArticleAiRequest], app.ArticleAiViewV2)
+	// 批量生成文章 embedding
+	r.POST("ai/embedding/generate", app.EmbeddingGenerateView)
+	// 向量搜索测试
+	r.GET("ai/search/vector", app.SearchByVectorView)
 }
