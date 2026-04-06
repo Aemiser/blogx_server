@@ -88,7 +88,7 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 		"cover":       cr.Cover,
 		"openComment": cr.OpenComment,
 	}
-	if article.Status == enum.ArticlePublished && !global.Config.Site.Article.NoExamine {
+	if (article.Status == enum.ArticlePublished || article.Status == enum.ArticleFail) && !global.Config.Site.Article.NoExamine {
 		// 如果是已发布的文章进行编辑，则需要进行审核，如果是草稿则不变，如果是免审核状态，条件不达标也不修改
 		mps["status"] = enum.ArticleExamine
 	}
@@ -101,8 +101,12 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 
 	// 判断文章有没有变化
 	if cr.Title != article.Title || cr.Content != article.Content {
-		// 重新构建全文记录
+		// 重新构建全文记录 全部删除，重新添加
+		global.Db.Model(&models.TextModel{}).
+			Where("article_id = ?", article.ID).
+			Delete(&models.TextModel{})
 
+		// 添加全文记录
 	}
 	res.SuccessWithMsg("文章更新成功", c)
 
