@@ -31,6 +31,7 @@ func (UserApi) AdminUserInfoUpdate(c *gin.Context) {
 	}
 
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #722ed1'>👑 管理员修改用户信息</span>")
 	log.SetItem("目标用户ID", fmt.Sprintf("<span style='color: #ff4d4f; font-weight: bold'>%d</span>", req.UserID))
 

@@ -5,6 +5,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/models/enum"
 	"blogx_server/service/log_service"
 	"blogx_server/service/message_service"
 	"blogx_server/service/text_service"
@@ -24,6 +25,7 @@ func (ArticleApi) ArticleExamineView(c *gin.Context) {
 	cr := middlerware.GetBind[ArticleExamineRequest](c)
 
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #1890ff'>📝 文章审核</span>")
 	log.SetItem("请求ID", fmt.Sprintf("<span style='color: #ff4d4f'>%d</span>", cr.ArticleID))
 

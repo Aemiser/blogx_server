@@ -23,6 +23,7 @@ type ActionLog struct {
 	c                  *gin.Context
 	title              string
 	level              enum.LogLevelType
+	logType            enum.LogType
 	RequestBody        []byte
 	ResponseBody       []byte
 	showRequest        bool
@@ -36,7 +37,7 @@ type ActionLog struct {
 }
 
 func NewActionLog(c *gin.Context) *ActionLog {
-	return &ActionLog{c: c}
+	return &ActionLog{c: c, logType: enum.ActionLogType}
 }
 
 func GetLog(c *gin.Context) *ActionLog {
@@ -59,6 +60,10 @@ func (ac *ActionLog) SetTitle(title string) {
 
 func (ac *ActionLog) SetLevel(level enum.LogLevelType) {
 	ac.level = level
+}
+
+func (ac *ActionLog) SetLogType(logType enum.LogType) {
+	ac.logType = logType
 }
 
 func (ac *ActionLog) SetRequest(c *gin.Context) {
@@ -245,7 +250,7 @@ func (ac *ActionLog) Save() uint {
 	}
 
 	log := models.LogModel{
-		LogType: enum.ActionLogType,
+		LogType: ac.logType,
 		Title:   ac.title,
 		Content: strings.Join(tmpItemList, "\n"),
 		Level:   ac.level,

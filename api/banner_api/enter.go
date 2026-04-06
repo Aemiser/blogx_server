@@ -5,6 +5,7 @@ import (
 	"blogx_server/common/res"
 	"blogx_server/global"
 	"blogx_server/models"
+	"blogx_server/models/enum"
 	"blogx_server/service/log_service"
 	"fmt"
 
@@ -27,6 +28,7 @@ func (BannerApi) BannerCreateView(c *gin.Context) {
 		return
 	}
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #1890ff'>➕ 创建Banner</span>")
 	log.SetItem("封面图片", fmt.Sprintf("<img src='%s' style='max-width: 200px; border-radius: 4px;'/>", req.Cover))
 	log.SetItem("跳转链接", fmt.Sprintf("<a href='%s' target='_blank' style='color: #1890ff'>%s</a>", req.Href, req.Href))
@@ -58,6 +60,7 @@ func (BannerApi) BannerRemoveView(c *gin.Context) {
 	}
 
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #ff4d4f'>🗑️ 删除Banner</span>")
 	log.SetItem("请求删除ID列表", fmt.Sprintf("<span style='color: #ff4d4f'>%v</span>", req.IDList))
 
@@ -110,6 +113,7 @@ func (BannerApi) BannerUpdateView(c *gin.Context) {
 	}
 
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #faad14'>✏️ 更新Banner</span>")
 	log.SetItem("Banner ID", fmt.Sprintf("<span style='color: #1890ff'>%d</span>", cr.ID))
 

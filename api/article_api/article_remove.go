@@ -5,6 +5,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/models/enum"
 	"blogx_server/service/log_service"
 	"blogx_server/service/message_service"
 	"fmt"
@@ -17,6 +18,7 @@ func (ArticleApi) ArticleRemoveView(c *gin.Context) {
 	cr := middlerware.GetBind[models.IDListRequest](c)
 
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #ff4d4f'>🗑️ 管理员删除文章</span>")
 	log.SetItem("操作类型", "<span style='color: #ff4d4f'>批量删除</span>")
 

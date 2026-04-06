@@ -5,6 +5,7 @@ import (
 	"blogx_server/common/res"
 	"blogx_server/global"
 	"blogx_server/models"
+	"blogx_server/models/enum"
 	"blogx_server/service/log_service"
 	"fmt"
 
@@ -26,6 +27,7 @@ func (ImageApi) ImageListView(c *gin.Context) {
 		return
 	}
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.QueryLogType)
 	log.SetTitle("<span style='color: #1890ff'>🖼️ 查看图片列表</span>")
 	log.SetItem("📄 分页信息", fmt.Sprintf("第 <span style='color: #1890ff'>%d</span> 页，每页 <span style='color: #1890ff'>%d</span> 条", req.Page, req.Limit))
 	_list, count, err := common.ListQuery(models.ImageModel{}, common.Options{
@@ -67,6 +69,7 @@ func (ImageApi) ImageRemoveView(c *gin.Context) {
 		return
 	}
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #ff4d4f'>🗑️ 删除图片</span>")
 	log.SetItem("🗑️ 请求删除ID列表", fmt.Sprintf("<span style='color: #ff4d4f'>%v</span>", req.IDList))
 	var list []models.ImageModel

@@ -36,6 +36,7 @@ func (UserApi) UserListView(c *gin.Context) {
 	cr := middlerware.GetBind[UserListRequest](c)
 
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.QueryLogType)
 	log.SetTitle("<span style='color: #1890ff'>👥 查看用户列表</span>")
 	log.SetItem("📄 分页信息", fmt.Sprintf("第 <span style='color: #1890ff'>%d</span> 页，每页 <span style='color: #1890ff'>%d</span> 条", cr.Page, cr.Limit))
 

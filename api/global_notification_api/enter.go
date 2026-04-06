@@ -28,6 +28,7 @@ func (GlobalNotificationApi) CreateView(c *gin.Context) {
 	cr := middlerware.GetBind[CreateRequest](c)
 
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #1890ff'>📢 创建全局通知</span>")
 	log.SetItem("📌 标题", fmt.Sprintf("<span style='color: #722ed1; font-weight: bold'>%s</span>", cr.Title))
 	log.SetItem("📝 内容", fmt.Sprintf("<div style='background: #f5f5f5; padding: 8px; border-radius: 4px; max-height: 100px; overflow-y: auto'>%s</div>", cr.Content))
@@ -129,6 +130,7 @@ func (GlobalNotificationApi) RemoveView(c *gin.Context) {
 	cr := middlerware.GetBind[models.IDListRequest](c)
 
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.OperationLogType)
 	log.SetTitle("<span style='color: #ff4d4f'>🗑️ 删除全局通知</span>")
 	log.SetItem("🗑️ 请求删除ID列表", fmt.Sprintf("<span style='color: #ff4d4f'>%v</span>", cr.IDList))
 
