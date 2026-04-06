@@ -56,6 +56,14 @@ func ChatStream(content, promopt string) (msgChan chan string, err error) {
 		return
 	}
 
+	if res.StatusCode != 200 {
+		logrus.Errorf("AI 服务返回错误状态码：%d", res.StatusCode)
+		res.Body.Close()
+		close(msgChan)
+		err = fmt.Errorf("AI 服务请求失败 (状态码 %d)", res.StatusCode)
+		return
+	}
+
 	scanner := bufio.NewScanner(res.Body)
 	scanner.Split(bufio.ScanLines)
 	go func() {

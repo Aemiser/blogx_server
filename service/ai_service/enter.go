@@ -15,9 +15,6 @@ import (
 //go:embed chat.analysisprompt
 var analysisPrompt string
 
-//go:embed chat.importprompt
-var importPrompt string
-
 const (
 	bashurl = "https://api.chatanywhere.tech/v1/chat/completions"
 )
@@ -138,7 +135,16 @@ func AnalysisChat(content string) (msg string, err error) {
 	return chat(content, analysisPrompt)
 }
 
+//go:embed chat.importprompt
+var importPrompt string
+
 func ImportChat(content string) (msg string, err error) {
 	return chat(content, importPrompt)
+}
 
+//go:embed chat.keywordprompt
+var keywordsPrompt string
+
+func KeywordChat(content string) (msg string, err error) {
+	return chat(content, keywordsPrompt)
 }
