@@ -6,6 +6,8 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/log_service"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -33,6 +35,10 @@ type UserListResponse struct {
 func (UserApi) UserListView(c *gin.Context) {
 	cr := middlerware.GetBind[UserListRequest](c)
 
+	log := log_service.GetLog(c)
+	log.SetTitle("<span style='color: #1890ff'>👥 查看用户列表</span>")
+	log.SetItem("📄 分页信息", fmt.Sprintf("第 <span style='color: #1890ff'>%d</span> 页，每页 <span style='color: #1890ff'>%d</span> 条", cr.Page, cr.Limit))
+
 	_list, count, _ := common.ListQuery(models.UserModel{}, common.Options{
 		Likes:    []string{"nickname", "username"},
 		Preloads: []string{"ArticleList", "LoginList"},
@@ -57,6 +63,22 @@ func (UserApi) UserListView(c *gin.Context) {
 			item.LastLoginDate = model.LoginList[len(model.LoginList)-1].CreatedAt
 		}
 		list = append(list, item)
+	}
+
+	log.SetItem("📊 查询结果", fmt.Sprintf("共查询到 <span style='color: #52c41a; font-weight: bold'>%d</span> 位用户", count))
+	if count > 0 {
+		log.SetItem("用户详情", fmt.Sprintf("<div style='background: #f5f5f5; padding: 8px; border-radius: 4px; max-height: 200px; overflow-y: auto'>%s</div>",
+			func() string {
+				var result string
+				for i, u := range list {
+					roleIcon := "👤"
+					if u.Role == enum.AdminRole {
+						roleIcon = "👑"
+					}
+					result += fmt.Sprintf("%d. %s %s (ID: %d, 文章: %d, IP: %s)<br>", i+1, roleIcon, u.Nickname, u.ID, u.ArticleCount, u.IP)
+				}
+				return result
+			}()))
 	}
 	res.SuccessWithList(list, count, c)
 	return

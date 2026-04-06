@@ -8,6 +8,8 @@ import (
 	"blogx_server/middlerware"
 	"blogx_server/models"
 	"blogx_server/models/enum"
+	"blogx_server/service/log_service"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,9 +27,21 @@ type CreateRequest struct {
 func (GlobalNotificationApi) CreateView(c *gin.Context) {
 	cr := middlerware.GetBind[CreateRequest](c)
 
+	log := log_service.GetLog(c)
+	log.SetTitle("<span style='color: #1890ff'>📢 创建全局通知</span>")
+	log.SetItem("📌 标题", fmt.Sprintf("<span style='color: #722ed1; font-weight: bold'>%s</span>", cr.Title))
+	log.SetItem("📝 内容", fmt.Sprintf("<div style='background: #f5f5f5; padding: 8px; border-radius: 4px; max-height: 100px; overflow-y: auto'>%s</div>", cr.Content))
+	if cr.Icon != "" {
+		log.SetItem("🖼️ 图标", fmt.Sprintf("<img src='%s' style='max-width: 30px;'/>", cr.Icon))
+	}
+	if cr.Href != "" {
+		log.SetItem("🔗 链接", fmt.Sprintf("<a href='%s' target='_blank' style='color: #1890ff'>%s</a>", cr.Href, cr.Href))
+	}
+
 	var model models.GlobalNotificationModel
 	err := global.Db.Take(&model, "title = ?", cr.Title).Error
 	if err == nil {
+		log.SetItem("❌ 创建结果", "<span style='color: #ff4d4f'>标题已存在，创建失败</span>")
 		res.FailWithMsg("全局消息名称重复", c)
 		return
 	}
@@ -40,9 +54,11 @@ func (GlobalNotificationApi) CreateView(c *gin.Context) {
 	}).Error
 
 	if err != nil {
+		log.SetItemError("创建失败", err)
 		res.FailWithMsg("全局消息创建失败", c)
 		return
 	}
+	log.SetItem("✅ 创建结果", "<span style='color: #52c41a; font-weight: bold'>创建成功</span>")
 	res.SuccessWithMsg("全局消息创建成功", c)
 
 }
@@ -112,12 +128,31 @@ func (GlobalNotificationApi) ListView(c *gin.Context) {
 func (GlobalNotificationApi) RemoveView(c *gin.Context) {
 	cr := middlerware.GetBind[models.IDListRequest](c)
 
+	log := log_service.GetLog(c)
+	log.SetTitle("<span style='color: #ff4d4f'>🗑️ 删除全局通知</span>")
+	log.SetItem("🗑️ 请求删除ID列表", fmt.Sprintf("<span style='color: #ff4d4f'>%v</span>", cr.IDList))
+
 	// 查库是否存在
 	var list []models.GlobalNotificationModel
 	global.Db.Find(&list, "id in  ?", cr.IDList)
 
+	log.SetItem("📋 查询到通知数", fmt.Sprintf("<span style='color: #1890ff'>%d</span>", len(list)))
 	if len(list) > 0 {
+		var titles []string
+		for _, m := range list {
+			titles = append(titles, m.Title)
+		}
+		log.SetItem("📝 通知标题", fmt.Sprintf("<div style='background: #f5f5f5; padding: 8px; border-radius: 4px'>%s</div>", func() string {
+			var result string
+			for i, t := range titles {
+				result += fmt.Sprintf("%d. %s<br>", i+1, t)
+			}
+			return result
+		}()))
 		global.Db.Delete(&list)
+		log.SetItem("✅ 删除结果", fmt.Sprintf("<span style='color: #52c41a; font-weight: bold'>成功删除 %d 条通知</span>", len(list)))
+	} else {
+		log.SetItem("❌ 删除结果", "<span style='color: #8c8c8c'>未找到任何通知</span>")
 	}
 
 	res.SuccessWithMsgf(c, "删除%d条全局消息，成功%d个", len(cr.IDList), len(list))

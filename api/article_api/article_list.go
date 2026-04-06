@@ -181,7 +181,7 @@ func (ArticleApi) ArticleListView(c *gin.Context) {
 		if model.Category != nil {
 			date.CategoryTitle = &model.Category.Title
 		}
-		if model.Status != enum.ArticlePublished && cr.Type != 3 {
+		if model.Status != enum.ArticlePublished && cr.Type != 3 && cr.CollectID != 0 {
 			date.NoPublish = true
 			date.ArticleModel.Cover = "http://" + c.Request.Host + "/" + global.Config.Uploads.ArticleCover
 		}
