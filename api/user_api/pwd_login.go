@@ -6,6 +6,7 @@ import (
 	"blogx_server/global"
 	"blogx_server/middlerware"
 	"blogx_server/models"
+	"blogx_server/models/enum"
 	"blogx_server/service/log_service"
 	"blogx_server/service/user_service"
 	"blogx_server/utils/pwd"
@@ -21,11 +22,13 @@ type PwdLoginRequest struct {
 
 func (UserApi) PwdLoginApi(c *gin.Context) {
 	log := log_service.GetLog(c)
+	log.SetLogType(enum.LoginLogType)
+	log.SetTitle("<span style='color: #52c41a'>🔐 用户名密码登录</span>")
 	log.ShowRequest()
-	log.ShowResponse()
-	log.SetItem("用户名密码登录", "")
+	log.SetItem("登录方式", "用户名/邮箱 + 密码")
 
 	req := middlerware.GetBind[PwdLoginRequest](c)
+	log.SetItem("登录账号", req.Val)
 
 	if !global.Config.Site.Login.UsernamePwdLogin {
 		res.FailWithMsg("未启用用户名密码登录", c)
@@ -35,6 +38,7 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 	var user models.UserModel
 	err := global.Db.Take(&user, "(username = ? or email = ?) and password <> ''", req.Val, req.Val).Error
 	if err != nil {
+		log.SetItem("登录结果", "<span style='color: #ff4d4f'>❌ 用户不存在</span>")
 		res.FailWithMsg("用户名或密码错误", c)
 		return
 	}
@@ -43,9 +47,14 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 	if !pwd.CompareHashAndPassword(user.Password, req.Password) {
 		fmt.Println(user.Password)
 		fmt.Println(req.Password)
+		log.SetItem("登录结果", "<span style='color: #ff4d4f'>❌ 密码错误</span>")
 		res.FailWithMsg("用户名或密码错误", c)
 		return
 	}
+
+	log.SetItem("用户ID", fmt.Sprintf("<span style='color: #1890ff'>%d</span>", user.ID))
+	log.SetItem("用户昵称", user.Nickname)
+	log.SetItem("登录结果", "<span style='color: #52c41a'>✅ 登录成功</span>")
 
 	// 颁发token
 	token, _ := jwts.GetToken(jwts.Claims{

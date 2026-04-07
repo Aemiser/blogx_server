@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"runtime"
 	"strings"
 
 	e "github.com/pkg/errors"
@@ -49,6 +50,48 @@ func NewRuntimeLog(serviceName string, runtimeType runtimeDateType) *RuntimeLog 
 		serviceName:     serviceName,
 		runtimeDateType: runtimeType,
 	}
+}
+
+func (ac *RuntimeLog) SetTitle(title string) {
+	ac.title = title
+}
+
+func (ac *RuntimeLog) SetLevel(level enum.LogLevelType) {
+	ac.level = level
+}
+
+func RuntimeError(err error, context ...string) {
+	if err == nil {
+		return
+	}
+
+	_, file, line, _ := runtime.Caller(1)
+	pc, _, _, _ := runtime.Caller(1)
+	funcName := runtime.FuncForPC(pc).Name()
+
+	log := NewRuntimeLog("error", RuntimedateDay)
+	log.SetTitle(fmt.Sprintf("<span style='color: #ff4d4f'>🔥 运行错误</span>"))
+	log.SetItem("错误信息", fmt.Sprintf("<span style='color: #ff4d4f'>%s</span>", err.Error()))
+	log.SetItem("错误类型", fmt.Sprintf("<span style='color: #faad14'>%T</span>", err))
+	log.SetItem("调用位置", fmt.Sprintf("<span style='color: #8c8c8c'>%s:%d</span>", file, line))
+	log.SetItem("调用函数", fmt.Sprintf("<span style='color: #1890ff'>%s</span>", funcName))
+	if len(context) > 0 {
+		log.SetItem("上下文", fmt.Sprintf("<span style='color: #722ed1'>%s</span>", strings.Join(context, " | ")))
+	}
+	log.SetItem("堆栈信息", fmt.Sprintf("<pre style='background: #fff1f0; padding: 8px; border-radius: 4px; max-height: 200px; overflow-y: auto'>%s</pre>", e.WithStack(err)))
+	log.Save()
+}
+
+func RuntimeWarn(msg string, context ...string) {
+	_, file, line, _ := runtime.Caller(1)
+	log := NewRuntimeLog("warn", RuntimedateDay)
+	log.SetTitle(fmt.Sprintf("<span style='color: #faad14'>⚠️ 运行警告</span>"))
+	log.SetItem("警告信息", fmt.Sprintf("<span style='color: #faad14'>%s</span>", msg))
+	log.SetItem("调用位置", fmt.Sprintf("<span style='color: #8c8c8c'>%s:%d</span>", file, line))
+	if len(context) > 0 {
+		log.SetItem("上下文", fmt.Sprintf("<span style='color: #722ed1'>%s</span>", strings.Join(context, " | ")))
+	}
+	log.Save()
 }
 func (ac *RuntimeLog) Save() {
 
