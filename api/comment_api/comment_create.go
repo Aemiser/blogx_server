@@ -28,7 +28,7 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 	var article models.ArticleModel
 	err := global.Db.Take(&article, "id=? and status = ?", cr.ArticleID, enum.ArticlePublished).Error
 	if err != nil {
-		res.FailWithMsg("文章不存在", c)
+		res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 		parentList := comment_service.GetParents(*cr.ParentID)
 		// 判断父评论的层级是否满足
 		if len(parentList) >= global.Config.Site.Article.Commentline {
-			res.FailWithMsg("评论层级达到限制", c)
+			res.FailWithCodeAndMsg(res.CommentLevelLimit, "评论层级达到限制", c)
 			return
 		}
 		if len(parentList) > 0 {
@@ -67,7 +67,7 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 
 	err = global.Db.Create(&model).Error
 	if err != nil {
-		res.FailWithMsg("评论失败", c)
+		res.FailWithCodeAndMsg(res.CommentCreateFail, "评论失败", c)
 		return
 	}
 

@@ -36,7 +36,7 @@ func (ArticleApi) ArticleLookView(c *gin.Context) {
 	// 检查文章是否存在，判断文章状态
 	err = global.Db.Take(&article, "status = ? and id =?", enum.ArticlePublished, cr.ArticleID).Error
 	if err != nil {
-		res.FailWithMsg("文章不存在", c)
+		res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 		return
 	}
 

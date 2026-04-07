@@ -26,7 +26,7 @@ func (ArticleApi) CategoryCreateView(c *gin.Context) {
 		//创建
 		err := global.Db.Take(&model, "user_id  = ? and title = ?", claims.Claims.UserID, cr.Title).Error
 		if err == nil {
-			res.FailWithMsg("分类已存在", c)
+			res.FailWithCodeAndMsg(res.ArticleCollectExists, "分类已存在", c)
 			return
 		}
 
@@ -35,7 +35,7 @@ func (ArticleApi) CategoryCreateView(c *gin.Context) {
 			UserID: claims.Claims.UserID,
 		}).Error
 		if err != nil {
-			res.FailWithMsg("创建分类错误", c)
+			res.FailWithCodeAndMsg(res.ArticleCategoryCreateFail, "创建分类错误", c)
 			return
 		}
 		res.SuccessWithMsg("创建分类成功", c)
@@ -46,14 +46,14 @@ func (ArticleApi) CategoryCreateView(c *gin.Context) {
 	// 先根据 ID 查询出记录
 	err := global.Db.First(&model, cr.ID).Error
 	if err != nil {
-		res.FailWithMsg("分类不存在", c)
+		res.FailWithCodeAndMsg(res.ArticleCategoryNotFound, "分类不存在", c)
 		return
 	}
 
 	// 再执行更新
 	err = global.Db.Model(&model).Update("title", cr.Title).Error
 	if err != nil {
-		res.FailWithMsg("更新分类错误", c)
+		res.FailWithCodeAndMsg(res.ArticleCategoryUpdateFail, "更新分类错误", c)
 		return
 	}
 	res.SuccessWithMsg("更新分类成功", c)
@@ -128,7 +128,7 @@ func (ArticleApi) CategoryRemoveView(c *gin.Context) {
 	if len(list) > 0 {
 		err := global.Db.Delete(&list).Error
 		if err != nil {
-			res.FailWithMsg("删除分类错误", c)
+			res.FailWithCodeAndMsg(res.ArticleCategoryDeleteFail, "删除分类错误", c)
 			return
 		}
 	}

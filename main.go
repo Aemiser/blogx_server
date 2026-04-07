@@ -25,6 +25,7 @@ func main() {
 	res.InitImageCode()
 	res.InitArticleCode()
 	res.InitFocusCode()
+	res.InitCommentCode()
 
 	router.Run()
 }

@@ -29,7 +29,7 @@ func (ArticleApi) ArticleDetailView(c *gin.Context) {
 	var article models.ArticleModel
 	err := global.Db.Preload("UserModel").Preload("Category").Take(&article, cr.ID).Error
 	if err != nil {
-		res.FailWithMsg("文章不存在", c)
+		res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 		return
 	}
 	//未登入的用户只能看见发布成功的文章
@@ -41,7 +41,7 @@ func (ArticleApi) ArticleDetailView(c *gin.Context) {
 	if err != nil {
 		// 未登入的用户，查看不是已发步的文章，就返回文章不存在，即未登入的用户只能看见发布成功的文章
 		if article.Status != enum.ArticlePublished {
-			res.FailWithMsg("文章不存在", c)
+			res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 			return
 		}
 		// token 无效时，设置为空 claims，避免后续访问空指针
@@ -64,7 +64,7 @@ func (ArticleApi) ArticleDetailView(c *gin.Context) {
 				// 不是自己的文章
 				if article.Status != enum.ArticlePublished {
 					// 文章不是已发布
-					res.FailWithMsg("文章不存在", c)
+					res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 					return
 				}
 			}

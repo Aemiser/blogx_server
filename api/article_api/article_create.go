@@ -31,7 +31,7 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 
 	user, err := jwts.GetClaimsByGin(c).GetUser()
 	if err != nil {
-		res.FailWithMsg("用户不存在", c)
+		res.FailWithCodeAndMsg(res.UserNotFound, "用户不存在", c)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 	if cr.CategoryID != nil {
 		err = global.Db.Take(&category, "id  = ? and user_id = ?", cr.CategoryID, user.ID).Error
 		if err != nil {
-			res.FailWithMsg("分类不存在", c)
+			res.FailWithCodeAndMsg(res.ArticleCategoryNotFound, "分类不存在", c)
 			return
 		}
 	}
@@ -85,7 +85,7 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 
 	err = global.Db.Create(&article).Error
 	if err != nil {
-		res.FailWithMsg("文章创建失败", c)
+		res.FailWithCodeAndMsg(res.ArticleCreateFail, "文章创建失败", c)
 		return
 	}
 

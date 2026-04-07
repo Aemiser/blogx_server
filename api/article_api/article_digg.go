@@ -19,7 +19,7 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 	var article models.ArticleModel
 	err := global.Db.Take(&article, cr.ID).Error
 	if err != nil {
-		res.FailWithMsg("文章不存在", c)
+		res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 		err = global.Db.Create(&model).Error
 
 		if err != nil {
-			res.FailWithMsg("点赞失败", c)
+			res.FailWithCodeAndMsg(res.ArticleDiggFail, "点赞失败", c)
 			return
 		}
 		res.SuccessWithMsg("点赞成功", c)
@@ -53,7 +53,7 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 		// GORM 会自动处理 DeletedAt 的设置
 		err = global.Db.Where("article_id = ? AND user_id = ?", cr.ID, claims.Claims.UserID).Delete(&models.ArticleDiggModel{}).Error
 		if err != nil {
-			res.FailWithMsg("取消点赞失败", c)
+			res.FailWithCodeAndMsg(res.ArticleDiggFail, "取消点赞失败", c)
 			return
 		}
 		redis_article.SetCacheDigg(article.ID, false)
@@ -63,7 +63,7 @@ func (ArticleApi) ArticleDiggView(c *gin.Context) {
 		digg.DeletedAt = gorm.DeletedAt{}
 		err = global.Db.Where("article_id = ? AND user_id = ?", cr.ID, claims.Claims.UserID).Save(&digg).Error
 		if err != nil {
-			res.FailWithMsg("点赞失败", c)
+			res.FailWithCodeAndMsg(res.ArticleDiggFail, "点赞失败", c)
 			return
 		}
 		res.SuccessWithMsg("点赞成功", c)

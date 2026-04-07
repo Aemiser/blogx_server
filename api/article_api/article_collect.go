@@ -26,7 +26,7 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 	// 检查文章是否存在，判断文章状态
 	err := global.Db.Take(&article, "status = ? and id =?", enum.ArticlePublished, cr.ArticleID).Error
 	if err != nil {
-		res.FailWithMsg("文章不存在", c)
+		res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 		return
 	}
 	claims := jwts.GetClaimsByGin(c)
@@ -49,7 +49,7 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 		// 判断收藏夹是否存在，并且是否是自己创建的
 		err = global.Db.Take(&collectmodel, "user_id = ?", claims.Claims.UserID).Error
 		if err != nil {
-			res.FailWithMsg("收藏夹不存在", c)
+			res.FailWithCodeAndMsg(res.ArticleCollectNotFound, "收藏夹不存在", c)
 			return
 		}
 	}
@@ -72,7 +72,7 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 		err = global.Db.Create(&model).Error
 
 		if err != nil {
-			res.FailWithMsg("收藏失败", c)
+			res.FailWithCodeAndMsg(res.ArticleCollectCreateFail, "收藏失败", c)
 			return
 		}
 		res.FailWithMsg("文章收藏成功", c)
@@ -87,7 +87,7 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 		// 未空,则删除，即取消收藏
 		err = global.Db.Model(models.UserArticleCollectModel{}).Delete(&articleCollect).Error
 		if err != nil {
-			res.FailWithMsg("取消收藏失败", c)
+			res.FailWithCodeAndMsg(res.ArticleCollectDeleteFail, "取消收藏失败", c)
 			return
 		}
 		res.FailWithMsg("取消收藏成功", c)
@@ -100,7 +100,7 @@ func (ArticleApi) ArticleCollectView(c *gin.Context) {
 	// 不为空，则恢复
 	err = global.Db.Unscoped().Model(&articleCollect).Update("deleted_at", nil).Error
 	if err != nil {
-		res.FailWithMsg("收藏收藏失败", c)
+		res.FailWithCodeAndMsg(res.ArticleCollectCreateFail, "收藏失败", c)
 		return
 	}
 	res.FailWithMsg("文章收藏成功", c)

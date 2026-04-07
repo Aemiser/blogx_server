@@ -39,7 +39,7 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 	err := global.Db.Take(&user, "(username = ? or email = ?) and password <> ''", req.Val, req.Val).Error
 	if err != nil {
 		log.SetItem("登录结果", "<span style='color: #ff4d4f'>❌ 用户不存在</span>")
-		res.FailWithMsg("用户名或密码错误", c)
+		res.FailWithCodeAndMsg(res.UserNotFound, "用户名或密码错误", c)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (UserApi) PwdLoginApi(c *gin.Context) {
 		fmt.Println(user.Password)
 		fmt.Println(req.Password)
 		log.SetItem("登录结果", "<span style='color: #ff4d4f'>❌ 密码错误</span>")
-		res.FailWithMsg("用户名或密码错误", c)
+		res.FailWithCodeAndMsg(res.UserPasswordError, "用户名或密码错误", c)
 		return
 	}
 

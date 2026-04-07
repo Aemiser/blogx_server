@@ -21,7 +21,7 @@ func (CommentApi) CommentRemoveView(c *gin.Context) {
 	var model models.CommentModel
 	err := global.Db.Preload("ArticleModel").Take(&model, cr.ID).Error
 	if err != nil {
-		res.FailWithMsg("评论不存在", c)
+		res.FailWithCodeAndMsg(res.CommentNotFound, "评论不存在", c)
 		return
 	}
 
@@ -29,7 +29,7 @@ func (CommentApi) CommentRemoveView(c *gin.Context) {
 	if claims.Claims.Role != enum.AdminRole {
 		// 不是自己发的评论  不是自己发的文章的评论
 		if model.UserID != claims.Claims.UserID || model.ArticleModel.UserID != claims.Claims.UserID {
-			res.FailWithMsg("无权限", c)
+			res.FailWithCodeAndMsg(res.UserNoPermission, "无权限", c)
 			return
 		}
 	}

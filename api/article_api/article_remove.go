@@ -39,7 +39,7 @@ func (ArticleApi) ArticleRemoveView(c *gin.Context) {
 		err := global.Db.Delete(&list).Error
 		if err != nil {
 			log.SetItemError("删除失败", err)
-			res.FailWithMsg("删除文章失败", c)
+			res.FailWithCodeAndMsg(res.ArticleDeleteFail, "删除文章失败", c)
 			return
 		}
 		log.SetItem("删除结果", fmt.Sprintf("<span style='color: #52c41a; font-weight: bold'>✅ 成功删除 %d 篇文章</span>", len(list)))

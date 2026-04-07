@@ -22,7 +22,7 @@ func (CommentApi) CommentTreeView(c *gin.Context) {
 	var article models.ArticleModel
 	err := global.Db.Take(&article, "id = ? and status =?", cr.ID, enum.ArticlePublished).Error
 	if err != nil {
-		res.FailWithMsg("文章不存在", c)
+		res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 		return
 	}
 	fmt.Println("articleID", article.ID)

@@ -31,7 +31,7 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 
 	user, err := jwts.GetClaimsByGin(c).GetUser()
 	if err != nil {
-		res.FailWithMsg("用户不存在", c)
+		res.FailWithCodeAndMsg(res.UserNotFound, "用户不存在", c)
 		return
 	}
 
@@ -47,13 +47,13 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 	var article models.ArticleModel
 	err = global.Db.Take(&article, cr.ID).Error
 	if err != nil {
-		res.FailWithMsg("文章不存在", c)
+		res.FailWithCodeAndMsg(res.ArticleNotFound, "文章不存在", c)
 		return
 	}
 
 	// 更新的文章必须是自己的
 	if article.UserID != user.ID {
-		res.FailWithMsg("更新的文章必须是自己的", c)
+		res.FailWithCodeAndMsg(res.UserNoPermission, "更新的文章必须是自己的", c)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 	if cr.CategoryID != nil {
 		err = global.Db.Take(&category, "id  = ? and user_id = ?", cr.CategoryID, user.ID).Error
 		if err != nil {
-			res.FailWithMsg("分类不存在", c)
+			res.FailWithCodeAndMsg(res.ArticleCategoryNotFound, "分类不存在", c)
 			return
 		}
 	}
@@ -95,7 +95,7 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 	// 更新文章
 	err = global.Db.Model(&article).Updates(mps).Error
 	if err != nil {
-		res.FailWithMsg("文章更新失败", c)
+		res.FailWithCodeAndMsg(res.ArticleUpdateFail, "文章更新失败", c)
 		return
 	}
 

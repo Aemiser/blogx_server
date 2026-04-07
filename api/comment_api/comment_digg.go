@@ -19,7 +19,7 @@ func (CommentApi) CommentDiggView(c *gin.Context) {
 	var comment models.CommentModel
 	err := global.Db.Take(&comment, cr.ID).Error
 	if err != nil {
-		res.FailWithMsg("评论不存在", c)
+		res.FailWithCodeAndMsg(res.CommentNotFound, "评论不存在", c)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (CommentApi) CommentDiggView(c *gin.Context) {
 		// 记录不存在，创建新的点赞
 		err = global.Db.Create(&model).Error
 		if err != nil {
-			res.FailWithMsg("点赞失败", c)
+			res.FailWithCodeAndMsg(res.CommentDiggFail, "点赞失败", c)
 			return
 		}
 		res.SuccessWithMsg("点赞成功", c)
@@ -54,7 +54,7 @@ func (CommentApi) CommentDiggView(c *gin.Context) {
 		// GORM 会自动处理 DeletedAt 的设置
 		err = global.Db.Where("comment_id = ? AND user_id = ?", cr.ID, claims.Claims.UserID).Delete(&models.CommentDiggModel{}).Error
 		if err != nil {
-			res.FailWithMsg("取消点赞失败", c)
+			res.FailWithCodeAndMsg(res.CommentDiggFail, "取消点赞失败", c)
 			return
 		}
 		redis_comment.SetCacheDigg(comment.ID, -1)
@@ -65,7 +65,7 @@ func (CommentApi) CommentDiggView(c *gin.Context) {
 		digg.DeletedAt = gorm.DeletedAt{}
 		err = global.Db.Where("comment_id = ? AND user_id = ?", cr.ID, claims.Claims.UserID).Save(&digg).Error
 		if err != nil {
-			res.FailWithMsg("点赞失败", c)
+			res.FailWithCodeAndMsg(res.CommentDiggFail, "点赞失败", c)
 			return
 		}
 		res.SuccessWithMsg("点赞成功", c)

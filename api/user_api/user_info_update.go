@@ -40,7 +40,7 @@ func (UserApi) UserInfoUpdate(c *gin.Context) {
 		var userModel models.UserModel
 		err = global.Db.Preload("UserConfigModel").Take(&userModel, claims.Claims.UserID).Error
 		if err != nil {
-			res.FailWithMsg("用户不存在", c)
+			res.FailWithCodeAndMsg(res.UserNotFound, "用户不存在", c)
 			return
 		}
 
@@ -52,7 +52,7 @@ func (UserApi) UserInfoUpdate(c *gin.Context) {
 				Where("username = ? and id <> ? ", req.Username, claims.Claims.UserID).
 				Count(&userCount)
 			if userCount > 0 {
-				res.FailWithMsg("该用户名已被使用", c)
+				res.FailWithCodeAndMsg(res.UserNameDuplicate, "该用户名已被使用", c)
 				return
 			}
 			// 用户名相同
@@ -61,7 +61,7 @@ func (UserApi) UserInfoUpdate(c *gin.Context) {
 				var uud = userModel.UserConfigModel.UpdataUsernameDate
 				if uud != nil {
 					if time.Now().Sub(*uud).Hours() < 24*30 {
-						res.FailWithMsg("用户名30天内只能修改一次", c)
+						res.FailWithCodeAndMsg(res.UserNameModifyLimit, "用户名30天内只能修改一次", c)
 						return
 					}
 				}
@@ -72,14 +72,14 @@ func (UserApi) UserInfoUpdate(c *gin.Context) {
 
 		if req.Nickname != nil || req.Avatar != nil {
 			if userModel.RegisterSource == enum.RegisterSourceTypeQQ {
-				res.FailWithMsg("QQ用户不允许修改昵称和头像", c)
+				res.FailWithCodeAndMsg(res.UserQQNotAllowed, "QQ用户不允许修改昵称和头像", c)
 				return
 			}
 		}
 
 		err = global.Db.Model(&userModel).Updates(userMap).Error
 		if err != nil {
-			res.FailWithMsg("用户信息修改失败", c)
+			res.FailWithCodeAndMsg(res.UserInfoUpdateFail, "用户信息修改失败", c)
 			return
 		}
 	}
@@ -89,13 +89,13 @@ func (UserApi) UserInfoUpdate(c *gin.Context) {
 		var userConfModel models.UserConfigModel
 		err = global.Db.Take(&userConfModel, "user_id =?", claims.Claims.UserID).Error
 		if err != nil {
-			res.FailWithMsg("用户不存在", c)
+			res.FailWithCodeAndMsg(res.UserNotFound, "用户不存在", c)
 			return
 		}
 		// 修改用户
 		err = global.Db.Model(&userConfModel).Updates(userConfMap).Error
 		if err != nil {
-			res.FailWithMsg("用户信息修改失败", c)
+			res.FailWithCodeAndMsg(res.UserInfoUpdateFail, "用户信息修改失败", c)
 			return
 		}
 	}
