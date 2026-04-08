@@ -16,7 +16,7 @@ import (
 )
 
 type ArticleExamineRequest struct {
-	ArticleID uint   `json:"articleID" binding:"required"`
+	ArticleID uint   `json:"article_id" binding:"required"`
 	Status    uint   `json:"status" binding:"required"`
 	Msg       string `json:"msg"`
 }
