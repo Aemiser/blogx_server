@@ -18,6 +18,7 @@ func main() {
 	flags.Run()
 
 	core.InitMysqlEs()
+	core.InItIPDB()
 
 	res.InitSysCode()
 	res.InitUserCode()
